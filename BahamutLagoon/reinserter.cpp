@@ -5,17 +5,18 @@
 
 using namespace std;
 
-const string names[] = { "BYUU", "YOYO", "SALMANDO", "ICEDRAKE", "THUNDERH", "MOLTEN", "TWINHEAD", "MUNIMUNI", "PUPPY", "FARNHEIT" };
+const string names[] = { "BYUU", "YOYO", "SALMANDO", "ICEDRAKE", "THUNDERH",
+                         "MOLTEN", "TWINHEAD", "MUNIMUNI", "PUPPY", "FARNHEIT" };
 
 void reinsert(vector<uint8_t>* data, string text)
 {
     regex textRegex("<TEXT \\$([0-9A-F]+)>");
     smatch m;
+
     regex_search(text, m, textRegex);
     uint16_t textStart = strtoul(m[1].str().c_str(), NULL, 16);
 
     regex sentenceRegex("<BEGIN \\$([0-9A-F]+)>\n((.|\n)*?)\n<END(Q?)>");
-
     auto begin = sregex_iterator(text.begin(), text.end(), sentenceRegex);
     auto   end = sregex_iterator();
 

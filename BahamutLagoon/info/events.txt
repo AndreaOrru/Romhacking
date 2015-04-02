@@ -1,3 +1,9 @@
+/*
+ * Disassembly of every single opcode in the game event scripts.
+ *
+ */
+
+
 >>> 0x00
 DA/4060:	C220    	rep #$20
 DA/4062:	C8      	iny 
