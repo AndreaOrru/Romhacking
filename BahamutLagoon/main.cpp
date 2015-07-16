@@ -13,7 +13,7 @@ struct Address
     uintptr_t addr() { return address - 0xC00000; }
 } __attribute__((packed));
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     auto fname = argv[1];
     auto room  = stoi(string(argv[2]));
@@ -29,10 +29,11 @@ int main(int argc, char *argv[])
 
     auto rooms = (Address*) &rom[0x1A8000];
     auto data = decompress(rom + rooms[room].addr());
-    delete rom;
 
     string text = extract(data);
     reinsert(data, text);
+
+    auto comp = compress(data);
 
     return 0;
 }

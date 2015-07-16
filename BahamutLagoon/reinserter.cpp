@@ -37,22 +37,45 @@ void reinsert(vector<uint8_t>* data, string text)
             continue;
         }
 
-        // Substitute <NAMES>
-        // Substitute <$xx>
+        vector<uint8_t> sentenceData;
+        auto c = sentence.begin();
+        while (c != sentence.end())
+        {
+            if (*c == '<')
+            {
+                c++;
+                if (*c == '$')
+                {
+                    c++;
+                    string b;
+                    b.push_back(*(c++)); b.push_back(*(c++));
+                    sentenceData.push_back(strtoul(b.c_str(), NULL, 16));
+                    c++;
+                }
+                else
+                {
+                    sentenceData.push_back(0xF4);
+                    int j;
+                    for (j = 0; j < 10; j++)
+                        if (sentence.compare(c - sentence.begin(), names[j].size(), names[j]) == 0)
+                            break;
+                    sentenceData.push_back(j);
+                    while (*(c++) != '>');
+                }
+            }
+            else
+                sentenceData.push_back(*(c++));
+        }
 
         (*data)[pointer  ] =  (output - data->begin())       & 0xFF;
         (*data)[pointer+1] = ((output - data->begin()) >> 8) & 0xFF;
 
-        if (output - data->begin() + sentence.size() > data->size())
-            data->resize(output - data->begin() + sentence.size());
+        if (output - data->begin() + sentenceData.size() > data->size())
+            data->resize(output - data->begin() + sentenceData.size());
 
-        output = copy(sentence.begin(), sentence.end(), output);
+        output = copy(sentenceData.begin(), sentenceData.end(), output);
         *(output++) = fd ? 0xFD : 0xFF;
     }
 
     data->resize(output - data->begin());
-
-    for (auto i: *data)
-        cout << i;
-    cout << endl;
 }
