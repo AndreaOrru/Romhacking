@@ -1,6 +1,4 @@
-#include <cctype>
-#include <cstdio>
-#include <string>
+#include "huffman.hpp"
 
 using namespace std;
 
@@ -12,84 +10,53 @@ uint16_t xba(uint16_t v)
     return (l << 8) | h;
 }
 
-uint16_t read16(uint8_t* rom, uint32_t addr)
+vector<uint8_t> sub_mte(uint16_t* meta, uint16_t v)
 {
-    return *((uint16_t*) &rom[addr]);
-}
-
-string mte(uint8_t* rom, uint16_t v)
-{
-    if (v <= 0x100)
-    {
-        if (isprint((char) v))
-            return string(1, (char) v);
-        else
-            return "[" + to_string(v) + "]";
-    }
+    if (v == 0x100)
+        return { 0xFF, 0xFF };
+    else if (v < 0x100)
+        return { (uint8_t) v };
 
     v -= 0x101;
 
-    string s1 = mte(rom, read16(rom, 0x3E6604 + v*4));
-    string s2 = mte(rom, read16(rom, 0x3E6606 + v*4));
+    auto s  = sub_mte(meta, meta[2 + v*2]);
+    auto s2 = sub_mte(meta, meta[2 + v*2 + 1]);
+    s.insert(s.end(), s2.begin(), s2.end());
 
-    return s1 + s2;
+    return s;
 }
 
-int main(int argc, char* argv[])
+vector<uint8_t>* decompress(uint16_t* data, uint16_t* meta)
 {
-    auto fname = argv[1];
-    auto room  = stoi(string(argv[2]));
-    auto words = stoi(string(argv[3]));
+    auto out = new vector<uint8_t>;
 
-    auto f = fopen(fname, "rb");
-    fseek(f, 0, SEEK_END);
-    auto size = ftell(f);
-    rewind(f);
-
-    auto rom = new uint8_t[size];
-    fread(rom, 1, size, f);
-    fclose(f);
-
-    uint16_t offset = read16(rom, 0x3E2E00 + room*2);
-    uint8_t  bank   = rom[0xEA91 + (rom[0x3E4E00 + room/2] & 0xF)];
-    uint32_t addr   = ((bank << 16) + offset) - 0xC00000;
-    printf("%x\n\n", addr, bank, offset);
-
-    // Algorithm:
     uint16_t bits;
-    uint8_t  n = 1;
+    uint16_t dataPtr = 0;
+    uint8_t  i = 1;
 
-    for (int i = 0; i < words; i++)
+    for (int n = 0; n < 500; n++)
     {
-        uint16_t y = read16(rom, 0x3E6600);
+        uint16_t metaPtr = meta[0];
 
-        while (true)
+        while (not (metaPtr & 0x8000))
         {
-            n--;
-            if (n == 0)
+            if (--i == 0)
             {
-                bits = xba(read16(rom, addr));
-                addr += 2;
-                n = 16;
+                bits = xba(data[dataPtr++]);
+                i = 16;
             }
 
             bool b = bits & 0x8000;
             bits <<= 1;
 
-            if (b)
-                y += 2;
+            if (b) metaPtr += 2;
 
-            y = read16(rom, 0x3E6600 + y);
-            if (y & 0x8000)
-                break;
+            metaPtr = meta[metaPtr / 2];
         }
 
-        y &= 0x7FFF;
-
-        printf("%s", mte(rom, y).c_str());
+        auto s = sub_mte(meta, metaPtr & 0x7FFF);
+        out->insert(out->end(), s.begin(), s.end());
     }
 
-    printf("\n");
-
-    return 0;
+    return out;
 }
