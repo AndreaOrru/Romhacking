@@ -26,15 +26,15 @@ vector<uint8_t> sub_mte(uint16_t* meta, uint16_t v)
     return s;
 }
 
-vector<uint8_t>* decompress(uint16_t* data, uint16_t* meta)
+vector<uint8_t>* decompress(uint16_t* data, uint32_t size, uint16_t* meta)
 {
     auto out = new vector<uint8_t>;
 
     uint16_t bits;
-    uint16_t dataPtr = 0;
+    uint32_t dataPtr = 0;
     uint8_t  i = 1;
 
-    for (int n = 0; n < 500; n++)
+    while (dataPtr <= size)
     {
         uint16_t metaPtr = meta[0];
 
@@ -42,7 +42,8 @@ vector<uint8_t>* decompress(uint16_t* data, uint16_t* meta)
         {
             if (--i == 0)
             {
-                bits = xba(data[dataPtr++]);
+                bits = xba(data[dataPtr / 2]);
+                dataPtr += 2;
                 i = 16;
             }
 
