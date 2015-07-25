@@ -48,13 +48,10 @@ int main(int argc, char* argv[])
         auto out = decompress(data, size, meta);
         auto script = extract(out);
 
-        if (!script.sentences->empty())
+        for (int j = 0; j < script.sentences->size(); j++)
         {
-            printf("[ Script $%.3X ]\n", rooms[i].second);
-
-            for (auto it: *(script.sentences))
-                cout << it.text << endl;
-            cout << endl;
+            auto sentence = script.sentences->at(j);
+            printf("[ Sentence $%X:%x ]\n%s\n", rooms[i].second, j, sentence.text.c_str());
         }
     }
 
