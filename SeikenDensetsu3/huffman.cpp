@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "huffman.hpp"
 
 using namespace std;
@@ -58,6 +59,12 @@ vector<uint8_t>* decompress(uint16_t* data, uint32_t size, uint16_t* meta)
         auto s = sub_mte(meta, metaPtr & 0x7FFF);
         out->insert(out->end(), s.begin(), s.end());
     }
+
+    vector<uint8_t> end { 0xFF, 0xFF };
+
+    auto it = find_end(out->begin(), out->end(), end.begin(), end.end());
+    if (it != out->end())
+        out->resize(distance(out->begin(), it) + end.size());
 
     return out;
 }

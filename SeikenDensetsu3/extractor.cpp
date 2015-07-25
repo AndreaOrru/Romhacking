@@ -32,40 +32,59 @@ string stringify(uint8_t c)
     }
 }
 
-vector< pair< uint16_t,string> >* extract(vector<uint8_t>* data)
+Script extract(vector<uint8_t>* data)
 {
-    auto sentences = new vector< pair<uint16_t,string> >;
+    auto sentences = new vector<Sentence>;
 
     uint32_t i = 0;
     while (i < data->size())
     {
-        uint16_t pos;
-        string sentence;
+        uint16_t pos = i;
+        string text;
+        bool end;
 
         if ((*data)[i] == 0x58 or (*data)[i] == 0x5E)
         {
-            pos = i;
-            sentence += ((*data)[i++] == 0x58) ? "<BOX>" : "<LINE>";
+            text += ((*data)[i++] == 0x58) ? "<BOX>" : "<LINE>";
 
             if ((*data)[i] != 0x10)
                 continue;
 
-            bool end = false;
+            end = false;
             while (i < (data->size() - 1) and not(end = ((*data)[i] == 0xFF and (*data)[i+1] == 0xFF)))
-                sentence += stringify((*data)[i++]);
+                text += stringify((*data)[i++]);
 
             if (end and (i - pos) > 2)
-                sentence += "<END>\n";
+                text += "<END>\n";
             else
                 continue;
-
             i += 2;
 
-            sentences->push_back(make_pair(pos, sentence));
+            sentences->emplace_back(pos, text);
+        }
+        else if ((*data)[i] == 0x7B)
+        {
+            text += "<ALT>";
+            i++;
+
+            for (int n = 0; n < 6; n++)
+            {
+                end = false;
+                while (i < (data->size() - 1) and not(end = ((*data)[i] == 0xFF and (*data)[i+1] == 0xFF)))
+                    text += stringify((*data)[i++]);
+
+                if (end)
+                    text += "<END>\n";
+                i += 2;
+            }
+            if (!end)
+                continue;
+
+            sentences->emplace_back(pos, text);
         }
         else
             i++;
     }
 
-    return sentences;
+    return Script(data, sentences);
 }

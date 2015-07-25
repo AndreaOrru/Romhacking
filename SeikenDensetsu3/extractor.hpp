@@ -1,6 +1,22 @@
 #pragma once
 #include <string>
-#include <utility>
 #include <vector>
 
-std::vector< std::pair< uint16_t,std::string> >* extract(std::vector<uint8_t>* data);
+struct Sentence
+{
+    uint32_t pos;
+    std::string text;
+
+    Sentence(uint32_t pos, std::string text) : pos(pos), text(text) {};
+};
+
+struct Script
+{
+    std::vector<uint8_t>* data;
+    std::vector<Sentence>* sentences;
+
+    Script(std::vector<uint8_t>* data, std::vector<Sentence>* sentences) :
+        data(data), sentences(sentences) {};
+};
+
+Script extract(std::vector<uint8_t>* data);

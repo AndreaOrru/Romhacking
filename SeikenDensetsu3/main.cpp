@@ -26,8 +26,10 @@ int main(int argc, char* argv[])
         uint8_t  bank   = rom[0xEA91 + (rom[0x3E4E00 + i/2] & 0xF)];
         uint32_t addr   = ((bank << 16) + offset) - 0xC00000;
 
-        if (addr < 0x3BD079)
+        if (addr < 0x3BD079 and not (addr >= 0x3B0000 and addr < 0x3B4C2E))
             roomsMap[addr] = i;
+        else
+            roomsMap[addr] = 0;
     }
     roomsMap.erase(0x390055);
     roomsMap.erase(0x394C2D);
@@ -37,18 +39,21 @@ int main(int argc, char* argv[])
 
     for (int i = 0; i < rooms.size() - 1; i++)
     {
+        if (!rooms[i].second)
+            continue;
+
         uint16_t* data = (uint16_t*) (rom + rooms[i].first);
         uint32_t  size = rooms[i+1].first - rooms[i].first;
 
         auto out = decompress(data, size, meta);
-        auto sentences = extract(out);
+        auto script = extract(out);
 
-        if (!sentences->empty())
+        if (!script.sentences->empty())
         {
-            printf("[ Script %X ]\n", rooms[i].second);
+            printf("[ Script $%.3X ]\n", rooms[i].second);
 
-            for (auto it: *sentences)
-                cout << it.second << endl;
+            for (auto it: *(script.sentences))
+                cout << it.text << endl;
             cout << endl;
         }
     }
