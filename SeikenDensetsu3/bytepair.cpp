@@ -7,7 +7,7 @@ using namespace std;
 namespace BytePair
 {
 
-void replacePair(list<uint16_t>& block, uint32_t p, uint16_t sym)
+void replace_pair(list<uint16_t>& block, uint32_t p, uint16_t sym)
 {
     uint16_t p1 =  p        & 0xFFFF;
     uint16_t p2 = (p >> 16) & 0xFFFF;
@@ -56,7 +56,7 @@ vector<uint32_t>* compress(vector< list<uint16_t> >& blocks)
             break;
 
         for (auto& block: blocks)
-            replacePair(block, maxPair, nextSym);
+            replace_pair(block, maxPair, nextSym);
         dict->push_back(maxPair);
         nextSym++;
     }

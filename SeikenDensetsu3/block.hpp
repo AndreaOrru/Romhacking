@@ -9,10 +9,12 @@ class Block
     Block(const uint8_t* rom, uint16_t index, uint32_t addr, bool isText) :
         rom(rom), index(index), addr(addr), isText(isText) {};
 
-    static std::vector<Block>* extractBlocks(const uint8_t* rom);
-    uint16_t getIndex() const { return index; }
-    uint32_t getSize() const { return (data == nullptr) ? 0 : data->size(); }
-    std::vector<Sentence>& getSentences() { return sentences; }
+    uint16_t get_index() const { return index; }
+    uint32_t get_size()  const { return (data == nullptr) ? 0 : data->size(); }
+    std::vector<Sentence>& get_sentences() { return sentences; }
+
+    static std::vector<Block>* extract_blocks(const uint8_t* rom);
+    static void reinsert(std::vector<Block>* blocks, const std::string& text);
 
   private:
     const uint8_t* rom;

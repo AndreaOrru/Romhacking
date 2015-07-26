@@ -4,7 +4,7 @@
 
 using namespace std;
 
-vector<Block>* Block::extractBlocks(const uint8_t* rom)
+vector<Block>* Block::extract_blocks(const uint8_t* rom)
 {
     map<uint32_t,uint16_t> blocksMap;
     for (int i = 0; i < 0x1000; i++)
@@ -33,6 +33,11 @@ vector<Block>* Block::extractBlocks(const uint8_t* rom)
     blocks->back().init(0x3C0000);
 
     return blocks;
+}
+
+static void reinsert(std::vector<Block>* blocks, const std::string& text)
+{
+    auto* newSentences = Sentence::extract_sentences(text);
 }
 
 void Block::init(uint32_t nextAddr)
@@ -101,7 +106,9 @@ void Block::extract()
             if (n > 0 or !check(begin, it))
                 it = begin + 1;
             else
-                sentences.emplace_back(distance(data->begin(), begin), begin, it);
+                sentences.emplace_back(index, sentences.size(),
+                                       distance(data->begin(), begin),
+                                       begin, it);
         }
         else
             it++;
