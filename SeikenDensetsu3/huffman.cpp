@@ -1,7 +1,10 @@
-#include <algorithm>
+#include "bytepair.hpp"
 #include "huffman.hpp"
 
 using namespace std;
+
+namespace Huffman
+{
 
 uint16_t xba(uint16_t v)
 {
@@ -11,31 +14,15 @@ uint16_t xba(uint16_t v)
     return (l << 8) | h;
 }
 
-vector<uint8_t> sub_mte(uint16_t* meta, uint16_t v)
+vector<uint8_t>* decompress(uint16_t* comprData, uint32_t comprSize, uint16_t* meta)
 {
-    if (v == 0x100)
-        return { 0xFF, 0xFF };
-    else if (v < 0x100)
-        return { (uint8_t) v };
+    auto data = new vector<uint8_t>;
 
-    v -= 0x101;
-
-    auto s  = sub_mte(meta, meta[2 + v*2]);
-    auto s2 = sub_mte(meta, meta[2 + v*2 + 1]);
-    s.insert(s.end(), s2.begin(), s2.end());
-
-    return s;
-}
-
-vector<uint8_t>* decompress(uint16_t* data, uint32_t size, uint16_t* meta)
-{
-    auto out = new vector<uint8_t>;
-
+    uint32_t comprPtr = 0;
     uint16_t bits;
-    uint32_t dataPtr = 0;
-    uint8_t  i = 1;
+    uint8_t i = 1;
 
-    while (dataPtr <= size)
+    while (comprPtr <= comprSize)
     {
         uint16_t metaPtr = meta[0];
 
@@ -43,28 +30,30 @@ vector<uint8_t>* decompress(uint16_t* data, uint32_t size, uint16_t* meta)
         {
             if (--i == 0)
             {
-                bits = xba(data[dataPtr / 2]);
-                dataPtr += 2;
+                bits = xba(comprData[comprPtr / 2]);
+                comprPtr += 2;
                 i = 16;
             }
 
             bool b = bits & 0x8000;
             bits <<= 1;
 
-            if (b) metaPtr += 2;
+            if (b)
+                metaPtr += 2;
 
             metaPtr = meta[metaPtr / 2];
         }
 
-        auto s = sub_mte(meta, metaPtr & 0x7FFF);
-        out->insert(out->end(), s.begin(), s.end());
+        auto s = BytePair::decompress(metaPtr & 0x7FFF, meta);
+        data->insert(data->end(), s.begin(), s.end());
     }
 
-    vector<uint8_t> end { 0xFF, 0xFF };
+    vector<uint8_t> end = { 0xFF, 0xFF };
+    auto occ = find_end(data->begin(), data->end(), end.begin(), end.end());
+    if (occ != data->end())
+        data->resize(distance(data->begin(), occ) + end.size());
 
-    auto it = find_end(out->begin(), out->end(), end.begin(), end.end());
-    if (it != out->end())
-        out->resize(distance(out->begin(), it) + end.size());
+    return data;
+}
 
-    return out;
 }

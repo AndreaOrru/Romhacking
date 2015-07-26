@@ -2,6 +2,6 @@ from os import environ
 
 env = Environment(ENV       = { 'TERM' : environ['TERM'] },
                   CXX       = 'clang++',
-                  CXXFLAGS  = '-std=c++11')
+                  CXXFLAGS  = '-std=c++11 -Ofast')
 
 env.Program('sd3.out', Glob('*.cpp'))
