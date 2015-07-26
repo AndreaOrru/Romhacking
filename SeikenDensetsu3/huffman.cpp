@@ -14,9 +14,9 @@ uint16_t xba(uint16_t v)
     return (l << 8) | h;
 }
 
-vector<uint8_t>* decompress(uint16_t* comprData, uint32_t comprSize, uint16_t* meta)
+vector<uint8_t>* decompress(const uint16_t* comprData, uint32_t comprSize, const uint16_t* meta)
 {
-    auto data = new vector<uint8_t>;
+    auto* data = new vector<uint8_t>;
 
     uint32_t comprPtr = 0;
     uint16_t bits;

@@ -4,6 +4,7 @@
 namespace Huffman
 {
 
-std::vector<uint8_t>* decompress(uint16_t* comprData, uint32_t comprSize, uint16_t* meta);
+std::vector<uint8_t>* decompress(const uint16_t* comprData, uint32_t comprSize,
+                                 const uint16_t* meta);
 
 }

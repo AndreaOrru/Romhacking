@@ -5,7 +5,10 @@
 
 using namespace std;
 
-Sentence::Sentence(uint32_t pos, vector<uint8_t>::iterator begin, vector<uint8_t>::iterator end)
+const string Sentence::names[] = { "DURAN", "KEVIN", "HAWK", "ANGELA", "CARLIE", "LISE" };
+
+Sentence::Sentence(uint32_t pos, vector<uint8_t>::const_iterator begin,
+                                 vector<uint8_t>::const_iterator end)
 {
     this->pos = pos;
     data.assign(begin, end);

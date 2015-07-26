@@ -3,9 +3,18 @@
 #include <vector>
 #include "sentence.hpp"
 
-struct Block
+class Block
 {
-    uint8_t* rom;
+  public:
+    Block(const uint8_t* rom, uint16_t index, uint32_t addr, bool isText) :
+        rom(rom), index(index), addr(addr), isText(isText) {};
+
+    static std::vector<Block>* getBlocks(const uint8_t* rom);
+    const std::vector<Sentence>& getSentences();
+    uint16_t getIndex() { return index; }
+
+  private:
+    const uint8_t* rom;
 
     uint16_t index;
     uint32_t addr;
@@ -17,14 +26,9 @@ struct Block
     std::vector<uint8_t>* data = nullptr;
     std::vector<Sentence> sentences;
 
-    Block(uint8_t* rom, uint16_t index, uint32_t addr, bool isText) :
-        rom(rom), index(index), addr(addr), isText(isText) {};
-
     void init(uint32_t nextAddr);
     void decompress();
     void extract();
-
-    bool check(std::vector<uint8_t>::iterator begin, std::vector<uint8_t>::iterator end);
+    bool check(std::vector<uint8_t>::const_iterator begin,
+               std::vector<uint8_t>::const_iterator end);
 };
-
-std::vector<Block>* getBlocks(uint8_t* rom);

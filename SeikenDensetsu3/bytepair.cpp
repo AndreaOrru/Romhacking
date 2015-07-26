@@ -5,7 +5,7 @@ using namespace std;
 namespace BytePair
 {
 
-vector<uint8_t> decompress(uint16_t v, uint16_t* meta)
+vector<uint8_t> decompress(uint16_t v, const uint16_t* meta)
 {
     if (v == 0x100)
         return { 0xFF, 0xFF };

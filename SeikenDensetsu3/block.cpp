@@ -4,7 +4,7 @@
 
 using namespace std;
 
-vector<Block>* getBlocks(uint8_t* rom)
+vector<Block>* Block::getBlocks(const uint8_t* rom)
 {
     map<uint32_t,uint16_t> blocksMap;
     for (int i = 0; i < 0x1000; i++)
@@ -18,7 +18,7 @@ vector<Block>* getBlocks(uint8_t* rom)
     blocksMap.erase(0x390055);
     blocksMap.erase(0x394C2D);
 
-    auto blocks = new vector<Block>;
+    auto* blocks = new vector<Block>;
     for (auto& block: blocksMap)
     {
         uint16_t    i = block.second;
@@ -46,7 +46,7 @@ void Block::decompress()
     data = Huffman::decompress(comprData, comprSize, (uint16_t*)(rom + 0x3E6600));
 }
 
-bool Block::check(vector<uint8_t>::iterator begin, vector<uint8_t>::iterator end)
+bool Block::check(vector<uint8_t>::const_iterator begin, vector<uint8_t>::const_iterator end)
 {
     if (distance(begin, end) < 7)
         return false;
@@ -60,10 +60,9 @@ bool Block::check(vector<uint8_t>::iterator begin, vector<uint8_t>::iterator end
 
 void Block::extract()
 {
-    if (data == nullptr)
-        this->decompress();
     if (!isText)
         return;
+    this->decompress();
 
     auto it = data->begin();
     while (it < data->end())
@@ -94,4 +93,12 @@ void Block::extract()
         else
             it++;
     }
+}
+
+const vector<Sentence>& Block::getSentences()
+{
+    if (data == nullptr)
+        extract();
+
+    return sentences;
 }
