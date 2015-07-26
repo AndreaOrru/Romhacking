@@ -4,7 +4,7 @@
 
 using namespace std;
 
-vector<Block>* Block::getBlocks(const uint8_t* rom)
+vector<Block>* Block::extractBlocks(const uint8_t* rom)
 {
     map<uint32_t,uint16_t> blocksMap;
     for (int i = 0; i < 0x1000; i++)
@@ -39,6 +39,9 @@ void Block::init(uint32_t nextAddr)
 {
     this->comprData = (uint16_t*)(rom + addr);
     this->comprSize = nextAddr  - this->addr;
+
+    this->decompress();
+    this->extract();
 }
 
 void Block::decompress()
@@ -76,7 +79,6 @@ void Block::extract()
 {
     if (!isText)
         return;
-    this->decompress();
 
     auto it = data->begin();
     while (it < data->end())
@@ -104,12 +106,4 @@ void Block::extract()
         else
             it++;
     }
-}
-
-vector<Sentence>& Block::getSentences()
-{
-    if (data == nullptr)
-        extract();
-
-    return sentences;
 }

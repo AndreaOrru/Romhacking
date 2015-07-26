@@ -11,6 +11,7 @@ struct Sentence
     uint32_t getSize() const { return data.size(); }
     const std::string& getText();
     static std::string stringify(uint8_t c);
+    void format();
 
   private:
     static const std::string names[];
@@ -18,5 +19,4 @@ struct Sentence
     std::vector<uint8_t> data;
     std::string text;
 
-    void format();
 };

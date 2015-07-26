@@ -12,14 +12,8 @@ Sentence::Sentence(uint32_t pos, vector<uint8_t>::const_iterator begin,
 {
     this->pos = pos;
     data.assign(begin, end);
-}
 
-const string& Sentence::getText()
-{
-    if (text.empty())
-        format();
-
-    return text;
+    format();
 }
 
 string Sentence::stringify(uint8_t c)
@@ -57,9 +51,17 @@ void Sentence::format()
     text = regex_replace(text, regex("<F8><01>"),                  "<MULTI>");
     text = regex_replace(text, regex("<F3><00>"),                  "<CHOICE>");
 
-    text = regex_replace(text, regex("\\{((((.|\n)*?)<END>){6})"), "<ALT>$1");
+    text = regex_replace(text, regex("\\{((((.|\n)*?)<END>){6})"), "<ALTERN>$1");
     text = regex_replace(text, regex("(X|\\^)((.|\n)*?)<END>"),    "<$1>$2<END>");
 
     text = regex_replace(text, regex("<X>"),                       "<BOX>");
     text = regex_replace(text, regex("<\\^>"),                     "<LINE>");
+}
+
+const string& Sentence::getText()
+{
+    if (text.empty())
+        format();
+
+    return text;
 }
