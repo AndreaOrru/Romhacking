@@ -48,6 +48,20 @@ void Block::decompress()
 
 bool Block::check(vector<uint8_t>::const_iterator begin, vector<uint8_t>::const_iterator end)
 {
+    if (*begin == 0xF2)
+        return *(begin+1) == 0x0E and find(begin, end, 0x14) != end;
+
+    if (*begin == 0xF3)
+        return *(begin+1) == 0x00 and find(begin, end, 0x14) != end;
+
+    if (*begin == 0xF8)
+        return (*(begin+1) == 0x01 and *(begin+2) >= 0xF0) or
+               (*(begin+1) == 0x03 and *(begin+2) == 0x0A);
+
+    if (*begin == 0xFA)
+        return (*(begin+1) == 0xFB and *(begin+2) == 0xFC) or
+               (*(begin+1) == 0x03 and *(begin+2) == 0x0A);
+
     if (distance(begin, end) < 7)
         return false;
 
@@ -67,7 +81,7 @@ void Block::extract()
     auto it = data->begin();
     while (it < data->end())
     {
-        if (*it == 0x58 or *it == 0x5E or *it == 0x7B)
+        if (*it == 0x58 or *it == 0x5E or *it == 0x7B or *it == 0xF2 or *it == 0xF3 or *it == 0xF8 or *it == 0xFA)
         {
             auto begin = it;
 
@@ -77,18 +91,15 @@ void Block::extract()
                 while (it+1 < data->end() and !(*it == 0xFF and *(it+1) == 0xFF))
                     it++;
                 if (it+1 >= data->end())
-                    return;
+                    break;
                 it += 2;
                 n--;
             }
 
-            if (n > 0)
-                return;
-
-            if (check(begin, it))
-                sentences.emplace_back(distance(data->begin(), begin), begin, it);
-            else
+            if (n > 0 or !check(begin, it))
                 it = begin + 1;
+            else
+                sentences.emplace_back(distance(data->begin(), begin), begin, it);
         }
         else
             it++;
