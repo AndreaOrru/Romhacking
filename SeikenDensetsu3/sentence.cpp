@@ -12,8 +12,14 @@ Sentence::Sentence(uint32_t pos, vector<uint8_t>::const_iterator begin,
 {
     this->pos = pos;
     data.assign(begin, end);
+}
 
-    format();
+const string& Sentence::getText()
+{
+    if (text.empty())
+        format();
+
+    return text;
 }
 
 string Sentence::stringify(uint8_t c)

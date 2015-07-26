@@ -9,7 +9,7 @@ struct Sentence
                            std::vector<uint8_t>::const_iterator end);
     uint32_t getPos() const { return pos; }
     uint32_t getSize() const { return data.size(); }
-    const std::string& getText() const { return text; }
+    const std::string& getText();
 
   private:
     static const std::string names[];

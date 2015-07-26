@@ -29,12 +29,11 @@ int main(int argc, char* argv[])
 
     auto* blocks = Block::getBlocks(rom);
     for (auto& b: *blocks)
-        for (int i = 0; i < b.getSentences().size(); i++)
-        {
-            auto& s = b.getSentences()[i];
-            printf("[ Sentence %X:%X (%X-%X) ]\n%s\n",
-                   b.getIndex(), i, s.getPos(), s.getPos() + s.getSize(), s.getText().c_str());
-        }
+    {
+        auto& s = b.getSentences();
+        for (int i = 0; i < s.size(); i++)
+            printf("[ Sentence $%X:%x ]\n%s\n", b.getIndex(), i, s[i].getText().c_str());
+    }
 
     return 0;
 }

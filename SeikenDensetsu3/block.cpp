@@ -95,7 +95,7 @@ void Block::extract()
     }
 }
 
-const vector<Sentence>& Block::getSentences()
+vector<Sentence>& Block::getSentences()
 {
     if (data == nullptr)
         extract();
