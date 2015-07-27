@@ -14,22 +14,14 @@ Sentence::Sentence(uint16_t block, uint16_t index, uint32_t pos,
     this->block = block;
     this->index = index;
     this->pos   = pos;
-    data.assign(begin, end);
+    this->data  = new vector<uint8_t>(begin, end);
 
     format();
 }
 
-Sentence::Sentence(uint16_t block, uint16_t index, string content)
+map<pair<uint16_t,uint16_t>,vector<uint8_t>*>* Sentence::extract_sentences(const string& text)
 {
-    this->block = block;
-    this->index = index;
-
-    unformat(content);
-}
-
-vector<Sentence>* Sentence::extract_sentences(const string& text)
-{
-    auto* sentences = new vector<Sentence>;
+    auto* sentences = new map<pair<uint16_t,uint16_t>,vector<uint8_t>*>;
 
     regex sentenceRegex("\\[Sentence \\$([0-9A-F]+):([0-9a-f]+)\\]\n((.|\n)*?)\n\\[/Sentence\\]");
     auto begin = sregex_iterator(text.begin(), text.end(), sentenceRegex);
@@ -42,7 +34,9 @@ vector<Sentence>* Sentence::extract_sentences(const string& text)
 
         uint16_t block = stoi(m[1], 0, 16);
         uint16_t index = stoi(m[2], 0, 16);
-        sentences->emplace_back(block, index, m[3]);
+        string content = m[3];
+        sentences->emplace(make_pair(make_pair(block, index),
+                                     unformat(content)));
     }
 
     return sentences;
@@ -73,7 +67,7 @@ string Sentence::stringify(uint8_t c)
 
 void Sentence::format()
 {
-    for (auto c: data)
+    for (auto c: *data)
         text += stringify(c);
 
     for (int i = 0; i < 6; i++)
@@ -95,35 +89,39 @@ void Sentence::format()
     text.append("[/Sentence]\n");
 }
 
-void Sentence::unformat(string& content)
+vector<uint8_t>* Sentence::unformat(string& content)
 {
+    auto* data = new vector<uint8_t>;
+
     content = regex_replace(content, regex("<LINE>"),    "^");
     content = regex_replace(content, regex("<BOX>"),     "X");
     content = regex_replace(content, regex("<ALTERN>"),  "{");
     content = regex_replace(content, regex("<CHOICE>"),  "<F3><00>");
     content = regex_replace(content, regex("<MULTI>"),   "<F8><01>");
-    content = regex_replace(content, regex("<END>"),     "<FF><FF>");
+    content = regex_replace(content, regex("<END>\n?"),  "<FF><FF>");
 
     for (int i = 0; i < 6; i++)
-        content = regex_replace(content, regex("<"+ names[i] +">"), "<19><F8>0"+ to_string(i) +">");
+        content = regex_replace(content, regex("<"+ names[i] +">"), "<19><F8><0"+ to_string(i) +">");
 
     content = regex_replace(content, regex("<OPEN>"),    "<10>");
     content = regex_replace(content, regex("<CLOSE>"),   "<11>");
     content = regex_replace(content, regex("<PAGE>\n?"), "<12>");
     content = regex_replace(content, regex("<OR>"),      "<14>");
     content = regex_replace(content, regex("<WAIT>"),    "<18>");
-    content = regex_replace(content, regex("_"),         "...");
+    content = regex_replace(content, regex("\\.\\.\\."), "_");
     content = regex_replace(content, regex("\n"),        "<17>");
 
     for (auto it = content.begin(); it < content.end(); it++)
         if (*it != '<')
-            data.push_back(*it);
+            data->push_back(*it);
         else
         {
             // Assume (it+2) is in range.
-            data.push_back(stoi(string(it+1, it+2), 0, 16));
+            data->push_back(stoi(string(it+1, it+3), 0, 16));
             it += 3;
         }
+
+    return data;
 }
 
 const string& Sentence::get_text()
@@ -132,4 +130,13 @@ const string& Sentence::get_text()
         format();
 
     return text;
+}
+
+void Sentence::set_data(vector<uint8_t>* data)
+{
+    if (this->data)
+        delete this->data;
+
+    this->data = data;
+    text.clear();
 }

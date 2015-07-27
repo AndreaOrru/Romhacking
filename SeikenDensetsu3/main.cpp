@@ -59,7 +59,7 @@ int main(int argc, const char* argv[])
     {
         string text((char*)read_file(textFile));
 
-        //blocks->reinsert(text);
+        Block::reinsert_blocks(blocks, text);
     }
 
     return 0;

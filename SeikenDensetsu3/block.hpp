@@ -14,7 +14,7 @@ class Block
     std::vector<Sentence>& get_sentences() { return sentences; }
 
     static std::vector<Block>* extract_blocks(const uint8_t* rom);
-    static void reinsert(std::vector<Block>* blocks, const std::string& text);
+    static void reinsert_blocks(std::vector<Block>* blocks, const std::string& text);
 
   private:
     const uint8_t* rom;

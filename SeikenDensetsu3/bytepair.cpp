@@ -24,8 +24,14 @@ void replace_pair(list<uint16_t>& block, uint32_t p, uint16_t sym)
     }
 }
 
-vector<uint32_t>* compress(vector< list<uint16_t> >& blocks)
+vector<uint32_t>* compress(vector<vector<uint8_t>*>& blocksData)
 {
+    vector<list<uint16_t>> dataList;
+    for (auto b: blocksData)
+        dataList.emplace_back(b->begin(), b->end());
+    for (auto& b: dataList)
+        replace_pair(b, 0x00FF00FF, 0x100);
+
     auto* dict = new vector<uint32_t>;
     map<uint32_t,int> occ;
     uint16_t nextSym = 0x0101;
@@ -36,7 +42,7 @@ vector<uint32_t>* compress(vector< list<uint16_t> >& blocks)
         int max = 0;
         occ.clear();
 
-        for (auto& block: blocks)
+        for (auto& block: dataList)
             for (auto it = block.begin(); it != prev(block.end()); it++)
             {
                 uint32_t p = (*next(it) << 16) | *it;
@@ -55,11 +61,14 @@ vector<uint32_t>* compress(vector< list<uint16_t> >& blocks)
         if (!maxPair)
             break;
 
-        for (auto& block: blocks)
+        for (auto& block: dataList)
             replace_pair(block, maxPair, nextSym);
         dict->push_back(maxPair);
         nextSym++;
     }
+
+    for (int i = 0; i < dataList.size(); i++)
+        blocksData[i]->assign(dataList[i].begin(), dataList[i].end());
 
     return dict;
 }
