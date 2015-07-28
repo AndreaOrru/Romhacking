@@ -1,5 +1,5 @@
 #include <iostream>
-#include <map>
+#include <array>
 #include "bytepair.hpp"
 
 using namespace std;
@@ -33,28 +33,25 @@ vector<uint32_t>* compress(vector<vector<uint16_t>*>& blocksData)
         replace_pair(b, 0x00FF00FF, 0x100);
 
     auto* dict = new vector<uint32_t>;
-    map<uint32_t,int> occ;
+    array<array<int,0x0580>,0x0580> occ;
     uint16_t nextSym = 0x0101;
 
     while (nextSym < 0x0580)
     {
         uint32_t maxPair = 0;
         int max = 0;
-        occ.clear();
+        for (auto& arr: occ)
+            arr.fill(0);
 
         for (auto& block: dataList)
             for (auto it = block.begin(); it != prev(block.end()); it++)
             {
-                uint32_t p = (*next(it) << 16) | *it;
-                if (occ.count(p) == 0)
-                    occ[p] = 1;
-                else
-                    occ[p]++;
+                int curr = ++occ[*it][*next(it)];
 
-                if (occ[p] > max)
+                if (curr > max)
                 {
-                    max = occ[p];
-                    maxPair = p;
+                    max = curr;
+                    maxPair = (*next(it) << 16) | *it;
                 }
             }
 

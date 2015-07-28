@@ -64,8 +64,7 @@ void Block::reinsert_blocks(std::vector<Block>* blocks, const std::string& text)
     for (auto b: blocksData)
         for (auto v: *b)
             cout << (char)v;
-    return;
-    auto* tree = Huffman::compress(blocksData);
+    //auto* tree = Huffman::compress(blocksData);
 }
 
 void Block::init(uint32_t nextAddr)
