@@ -41,30 +41,31 @@ void Block::reinsert_blocks(std::vector<Block>* blocks, const std::string& text)
 {
     auto* newSentences = Sentence::extract_sentences(text);
 
-    vector<vector<uint8_t>*> blocksData;
+    vector<vector<uint16_t>*> blocksData;
     for (auto& b: *blocks)
     {
-        int diff = 0;
+        auto* blockData = new vector<uint16_t>;
+        auto last = b.data->begin();
+
         for (auto& s: b.get_sentences())
         {
-            s.set_pos(s.get_pos() + diff);
+            auto* newData = newSentences->at(make_pair(b.index, s.get_index()));
 
-            auto begin = b.data->begin() + s.get_pos();
-            b.data->erase(begin, begin + s.get_size());
-            diff -= s.get_size();
+            auto curr = b.data->begin() + s.get_pos();
+            blockData->insert(blockData->end(), last, curr);
+            last = curr + s.get_size();
 
-            s.set_data(newSentences->at(make_pair(b.index, s.get_index())));
-            diff += s.get_size();
-
-            b.data->insert(begin, s.get_data()->begin(), s.get_data()->end());
+            blockData->insert(blockData->end(), newData->begin(), newData->end());
         }
-        blocksData.push_back(b.data);
+        blockData->insert(blockData->end(), last, b.data->end());
+        blocksData.push_back(blockData);
     }
     auto* dict = BytePair::compress(blocksData);
-
     for (auto b: blocksData)
-        for (int i = 0; i < b->size(); i++)
-            cout << ((uint8_t*)b->data())[i];
+        for (auto v: *b)
+            cout << (char)v;
+    return;
+    auto* tree = Huffman::compress(blocksData);
 }
 
 void Block::init(uint32_t nextAddr)

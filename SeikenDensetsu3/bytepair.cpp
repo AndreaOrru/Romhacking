@@ -1,4 +1,4 @@
-#include <list>
+#include <iostream>
 #include <map>
 #include "bytepair.hpp"
 
@@ -24,10 +24,10 @@ void replace_pair(list<uint16_t>& block, uint32_t p, uint16_t sym)
     }
 }
 
-vector<uint32_t>* compress(vector<vector<uint8_t>*>& blocksData)
+vector<uint32_t>* compress(vector<vector<uint16_t>*>& blocksData)
 {
     vector<list<uint16_t>> dataList;
-    for (auto b: blocksData)
+    for (auto* b: blocksData)
         dataList.emplace_back(b->begin(), b->end());
     for (auto& b: dataList)
         replace_pair(b, 0x00FF00FF, 0x100);
@@ -58,7 +58,7 @@ vector<uint32_t>* compress(vector<vector<uint8_t>*>& blocksData)
                 }
             }
 
-        if (!maxPair)
+        if (!max)
             break;
 
         for (auto& block: dataList)
