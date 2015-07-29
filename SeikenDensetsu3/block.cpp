@@ -1,4 +1,3 @@
-#include <iostream>
 #include <map>
 #include "block.hpp"
 #include "bytepair.hpp"
@@ -37,7 +36,7 @@ vector<Block>* Block::extract_blocks(const uint8_t* rom)
     return blocks;
 }
 
-void Block::reinsert_blocks(std::vector<Block>* blocks, const std::string& text)
+void Block::reinsert_blocks(uint8_t* rom, std::vector<Block>* blocks, const std::string& text)
 {
     auto* newSentences = Sentence::extract_sentences(text);
 
@@ -60,11 +59,29 @@ void Block::reinsert_blocks(std::vector<Block>* blocks, const std::string& text)
         blockData->insert(blockData->end(), last, b.data->end());
         blocksData.push_back(blockData);
     }
+
     auto* dict = BytePair::compress(blocksData);
-    for (auto b: blocksData)
-        for (auto v: *b)
-            cout << (char)v;
-    //auto* tree = Huffman::compress(blocksData);
+    auto* tree = Huffman::compress(blocksData);
+
+    uint32_t last = 0x390000;
+    for (int i = 0; i < blocks->size(); i++)
+    {
+        auto& b = blocks->at(i);
+        b.addr = last;
+        b.comprData = (uint16_t*)(rom + b.addr);
+        b.comprSize = blocksData.at(i)->size() * 2;
+
+        uint8_t*    bank = &rom[0x3E4E00 + b.index/2];
+        uint16_t* offset = &((uint16_t*) &rom[0x3E2E00])[b.index];
+        *bank   = (*bank & 0xF0) | (((b.addr >> 16) - 0x38) & 0xF);
+        *offset = (b.addr & 0xFFFF);
+
+        copy(blocksData.at(i)->begin(), blocksData.at(i)->end(), b.comprData);
+        last += b.comprSize;
+    }
+
+    copy(dict->begin(), dict->end(), (uint32_t*)(&rom[0x3E6604]));
+    copy(tree->begin(), tree->end(), (uint16_t*)(&rom[0x3E7800]));
 }
 
 void Block::init(uint32_t nextAddr)

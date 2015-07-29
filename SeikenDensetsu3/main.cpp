@@ -4,16 +4,23 @@
 
 using namespace std;
 
-uint8_t* read_file(FILE* file)
+size_t read_file(FILE* file, uint8_t*& mem)
 {
     fseek(file, 0, SEEK_END);
     size_t size = ftell(file);
     rewind(file);
 
-    uint8_t* mem = new uint8_t[size];
+    mem = new uint8_t[size];
     fread(mem, 1, size, file);
     fclose(file);
 
+    return size;
+}
+
+uint8_t* read_file(FILE* file)
+{
+    uint8_t* mem;
+    read_file(file, mem);
     return mem;
 }
 
@@ -45,7 +52,8 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    uint8_t* rom = read_file(romFile);
+    uint8_t* rom;
+    size_t romSize = read_file(romFile, rom);
     auto* blocks = Block::extract_blocks(rom);
 
     if (option == "-e")
@@ -58,8 +66,11 @@ int main(int argc, const char* argv[])
     else if (option == "-i")
     {
         string text((char*)read_file(textFile));
+        Block::reinsert_blocks(rom, blocks, text);
 
-        Block::reinsert_blocks(blocks, text);
+        romFile = fopen("out.smc", "wb");
+        fwrite(rom, 1, romSize, romFile);
+        fclose(romFile);
     }
 
     return 0;

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <queue>
 #include "bytepair.hpp"
 #include "huffman.hpp"
@@ -10,11 +9,11 @@ namespace Huffman
 
 struct Node
 {
-    int sym;
-    int weight;
+    int sym = 0;
+    int weight = 0;
 
-    uint64_t bits;
-    int nBits;
+    uint64_t bits = 0;
+    int nBits = 0;
 
     Node* parent = 0;
     Node* left   = 0;
@@ -54,21 +53,29 @@ vector<uint16_t>* encode_tree(Node* tree)
     {
         Node* n = q.front(); q.pop();
 
-        if (not tags.empty())
+        if (!n->left and !n->right)
         {
-            encoding->at(tags.front()) = encoding->size();
+            encoding->at(tags.front()) = 0x8000 | n->sym;
             tags.pop();
         }
-
-        if (!n->left and !n->right)
-            encoding->push_back(0x8000 | n->sym);
         else
-            for (int i = 0; i < (n->left != 0) + (n->right != 0); i++)
+        {
+            if (not tags.empty())
+            {
+                encoding->at(tags.front()) = encoding->size()*2 + 0x1200;
+                tags.pop();
+            }
+            if (n->left != 0)
             {
                 tags.push(encoding->size());
                 encoding->push_back(0x0000);
             }
-
+            if (n->right != 0)
+            {
+                tags.push(encoding->size());
+                encoding->push_back(0x0000);
+            }
+        }
         if (n->left)
             q.push(n->left);
         if (n->right)
@@ -82,7 +89,7 @@ void encode_data(vector<vector<uint16_t>*>& blocksData, vector<Node*>& nodes)
 {
     for (int i = 0; i < blocksData.size(); i++)
     {
-        auto* compr = new vector<uint16_t>(0, 1);
+        auto* compr = new vector<uint16_t>;
         int b = 0;
 
         for (auto sym: *blocksData[i])
@@ -92,17 +99,15 @@ void encode_data(vector<vector<uint16_t>*>& blocksData, vector<Node*>& nodes)
 
             while (toWrite > 0)
             {
-                if (b/16 >= compr->size())
-                    compr->push_back(0);
+                compr->resize(b/16 + 1, 0);
 
                 int canWrite = 16 - b%16;
                 if (toWrite <= canWrite)
                     compr->at(b/16) |= (bits << (canWrite - toWrite));
                 else
                     compr->at(b/16) |= (bits >> (toWrite - canWrite));
-
-                toWrite -= min(toWrite, canWrite);
                 b += min(toWrite, canWrite);
+                toWrite -= min(toWrite, canWrite);
             }
         }
 
@@ -137,6 +142,7 @@ vector<uint16_t>* compress(vector<vector<uint16_t>*>& blocksData)
         Node* n2 = q.top(); q.pop();
         q.push(new Node(n1, n2));
     }
+    Node* tree = q.top();
 
     for (auto n: nodes)
         if (n)
@@ -144,16 +150,15 @@ vector<uint16_t>* compress(vector<vector<uint16_t>*>& blocksData)
             Node* p = n;
             while (p->parent)
             {
+                n->bits |= (p == p->parent->right) << n->nBits;
                 n->nBits++;
-                n->bits |= (p == p->parent->right) << (16 - n->nBits);
                 p = p->parent;
             }
         }
 
-    Node* tree = q.top();
     auto* encodedTree = encode_tree(tree);
-    delete tree;
     encode_data(blocksData, nodes);
+    delete tree;
 
     return encodedTree;
 }
@@ -192,10 +197,10 @@ vector<uint8_t>* decompress(const uint16_t* comprData, uint32_t comprSize, const
         data->insert(data->end(), s.begin(), s.end());
     }
 
-    vector<uint8_t> end = { 0xFF, 0xFF };
-    auto occ = find_end(data->begin(), data->end(), end.begin(), end.end());
-    if (occ != data->end())
-        data->resize(distance(data->begin(), occ) + end.size());
+    //vector<uint8_t> end = { 0xFF, 0xFF };
+    //auto occ = find_end(data->begin(), data->end(), end.begin(), end.end());
+    //if (occ != data->end())
+    //    data->resize(distance(data->begin(), occ) + end.size());
 
     return data;
 }
