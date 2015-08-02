@@ -16,8 +16,22 @@ vector<Block>* Block::extract_blocks(const uint8_t* rom)
 
         blocksMap[addr] = i;
     }
+    for (int i = 0; i < 0x1A9; i++)
+    {
+        uint8_t    bank = 0xFB;
+        uint16_t offset = ((uint16_t*) &rom[0x4BF7C])[i];
+        uint32_t   addr = ((bank << 16) + offset) - 0xC00000;
+
+        blocksMap[addr] = i + 0x1000;
+    }
     blocksMap.erase(0x390055);
     blocksMap.erase(0x394C2D);
+    blocksMap.erase(0x3B0003);
+    for (auto& i: blocksMap)
+    {
+        printf("%x: %x\n", i.first, i.second);
+    }
+
 
     auto* blocks = new vector<Block>;
     for (auto& block: blocksMap)
@@ -25,6 +39,8 @@ vector<Block>* Block::extract_blocks(const uint8_t* rom)
         uint16_t    i = block.second;
         uint32_t addr = block.first;
         bool   isText = addr < 0x3BD079 and !(addr >= 0x3B0000 and addr < 0x3B4C2E);
+        if (block.second >= 0x1000)
+            isText = false;
 
         blocks->emplace_back(rom, i, addr, isText);
     }
@@ -71,10 +87,18 @@ void Block::reinsert_blocks(uint8_t* rom, std::vector<Block>* blocks, const std:
         b.comprData = (uint16_t*)(rom + b.addr);
         b.comprSize = blocksData.at(i)->size() * 2;
 
-        uint8_t*    bank = &rom[0x3E4E00 + b.index/2];
-        uint16_t* offset = &((uint16_t*) &rom[0x3E2E00])[b.index];
-        *bank   = (*bank & 0xF0) | (((b.addr >> 16) - 0x38) & 0xF);
-        *offset = (b.addr & 0xFFFF);
+        if (b.index < 0x1000)
+        {
+            uint8_t*    bank = &rom[0x3E4E00 + b.index/2];
+            uint16_t* offset = &((uint16_t*) &rom[0x3E2E00])[b.index];
+            *bank   = (*bank & 0xF0) | (((b.addr >> 16) - 0x38) & 0xF);
+            *offset = (b.addr & 0xFFFF);
+        }
+        else
+        {
+            uint16_t* offset = &((uint16_t*) &rom[0x4BF7C])[b.index - 0x1000];
+            *offset = (b.addr & 0xFFFF);
+        }
 
         copy(blocksData.at(i)->begin(), blocksData.at(i)->end(), b.comprData);
         last += b.comprSize;

@@ -89,6 +89,7 @@ void encode_data(vector<vector<uint16_t>*>& blocksData, vector<Node*>& nodes)
 {
     for (int i = 0; i < blocksData.size(); i++)
     {
+        //blocksData[i]->push_back(0x100);
         auto* compr = new vector<uint16_t>;
         int b = 0;
 
@@ -112,6 +113,8 @@ void encode_data(vector<vector<uint16_t>*>& blocksData, vector<Node*>& nodes)
         }
 
         delete blocksData[i];
+        for (auto& v: *compr)
+            v = xba(v);
         blocksData[i] = compr;
     }
 }
