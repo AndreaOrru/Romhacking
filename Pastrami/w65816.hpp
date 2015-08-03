@@ -56,10 +56,10 @@ Flags P;
 uint8_t mem[0x100000];
 
 inline uint8_t  rd_b(uint32_t i) { return mem[i]; }
-inline uint16_t rd_w(uint32_t i) { return *((uint16_t*) mem[i]); }
-inline uint32_t rd_l(uint32_t i) { return *((uint32_t*) mem[i]) & 0xFFFFFF; }
+inline uint16_t rd_w(uint32_t i) { return *((uint16_t*) &mem[i]); }
+inline uint32_t rd_l(uint32_t i) { return *((uint32_t*) &mem[i]) & 0xFFFFFF; }
 inline void wr_b(uint32_t i, uint8_t  v) { mem[i] = v; }
-inline void wr_w(uint32_t i, uint16_t v) { *((uint16_t*) mem[i]) = v; }
+inline void wr_w(uint32_t i, uint16_t v) { *((uint16_t*) &mem[i]) = v; }
 
 void ADC_imm_b(uint8_t v)
 {
