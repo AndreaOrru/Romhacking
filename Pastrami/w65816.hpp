@@ -1,5 +1,5 @@
-#include <cstdint>
 #pragma once
+#include <cstdint>
 
 struct Flags
 {
@@ -56,9 +56,10 @@ Flags P;
 uint8_t mem[0x100000];
 
 inline uint8_t  rd_b(uint32_t i) { return mem[i]; }
-inline uint16_t rd_w(uint32_t i) { return *((uint16_t*) &mem[i]); }
+inline uint16_t rd_w(uint32_t i) { return *((uint16_t*) mem[i]); }
+inline uint32_t rd_l(uint32_t i) { return *((uint32_t*) mem[i]) & 0xFFFFFF; }
 inline void wr_b(uint32_t i, uint8_t  v) { mem[i] = v; }
-inline void wr_w(uint32_t i, uint16_t v) { *((uint16_t*) &mem[i]) = v; }
+inline void wr_w(uint32_t i, uint16_t v) { *((uint16_t*) mem[i]) = v; }
 
 void ADC_imm_b(uint8_t v)
 {
@@ -68,15 +69,15 @@ void ADC_imm_b(uint8_t v)
         result = A.l + v + P.c;
     else
     {
-        result = (A.l & 0x0f) + (v & 0x0f) + (P.c << 0);
+        result = (A.l & 0x0F) + (v & 0x0F) + (P.c << 0);
         if (result > 0x09) result += 0x06;
-        P.c = result > 0x0f;
-        result = (A.l & 0xf0) + (v & 0xf0) + (P.c << 4) + (result & 0x0f);
+        P.c = result > 0x0F;
+        result = (A.l & 0xF0) + (v & 0xF0) + (P.c << 4) + (result & 0x0F);
     }
 
     P.v = ~(A.l ^ v) & (A.l ^ result) & 0x80;
-    if (P.d && result > 0x9f) result += 0x60;
-    P.c = result > 0xff;
+    if (P.d && result > 0x9F) result += 0x60;
+    P.c = result > 0xFF;
     P.n = result & 0x80;
     P.z = (uint8_t)result == 0;
 
@@ -92,21 +93,21 @@ void ADC_imm_w(uint16_t v)
         result = A.w + v + P.c;
     else
     {
-        result = (A.w & 0x000f) + (v & 0x000f) + (P.c <<  0);
+        result = (A.w & 0x000F) + (v & 0x000F) + (P.c <<  0);
         if (result > 0x0009) result += 0x0006;
-        P.c = result > 0x000f;
-        result = (A.w & 0x00f0) + (v & 0x00f0) + (P.c <<  4) + (result & 0x000f);
-        if (result > 0x009f) result += 0x0060;
-        P.c = result > 0x00ff;
-        result = (A.w & 0x0f00) + (v & 0x0f00) + (P.c <<  8) + (result & 0x00ff);
-        if (result > 0x09ff) result += 0x0600;
-        P.c = result > 0x0fff;
-        result = (A.w & 0xf000) + (v & 0xf000) + (P.c << 12) + (result & 0x0fff);
+        P.c = result > 0x000F;
+        result = (A.w & 0x00F0) + (v & 0x00F0) + (P.c <<  4) + (result & 0x000F);
+        if (result > 0x009F) result += 0x0060;
+        P.c = result > 0x00FF;
+        result = (A.w & 0x0F00) + (v & 0x0F00) + (P.c <<  8) + (result & 0x00FF);
+        if (result > 0x09FF) result += 0x0600;
+        P.c = result > 0x0FFF;
+        result = (A.w & 0xF000) + (v & 0xF000) + (P.c << 12) + (result & 0x0FFF);
     }
 
     P.v = ~(A.w ^ v) & (A.w ^ result) & 0x8000;
-    if (P.d && result > 0x9fff) result += 0x6000;
-    P.c = result > 0xffff;
+    if (P.d && result > 0x9FFF) result += 0x6000;
+    P.c = result > 0xFFFF;
     P.n = result & 0x8000;
     P.z = (uint16_t)result == 0;
 
@@ -283,21 +284,21 @@ void ORA_w(uint32_t i) { ORA_imm_w(rd_w(i)); }
 void SBC_imm_b(uint8_t v)
 {
     int result;
-    v ^= 0xff;
+    v ^= 0xFF;
 
     if (!P.d)
         result = A.l + v + P.c;
     else
     {
-        result = (A.l & 0x0f) + (v & 0x0f) + (P.c << 0);
-        if (result <= 0x0f) result -= 0x06;
-        P.c = result > 0x0f;
-        result = (A.l & 0xf0) + (v & 0xf0) + (P.c << 4) + (result & 0x0f);
+        result = (A.l & 0x0F) + (v & 0x0F) + (P.c << 0);
+        if (result <= 0x0F) result -= 0x06;
+        P.c = result > 0x0F;
+        result = (A.l & 0xF0) + (v & 0xF0) + (P.c << 4) + (result & 0x0F);
     }
 
     P.v = ~(A.l ^ v) & (A.l ^ result) & 0x80;
-    if (P.d && result <= 0xff) result -= 0x60;
-    P.c = result > 0xff;
+    if (P.d && result <= 0xFF) result -= 0x60;
+    P.c = result > 0xFF;
     P.n = result & 0x80;
     P.z = (uint8_t)result == 0;
 
@@ -308,27 +309,27 @@ void SBC_b(uint32_t i) { SBC_imm_b(rd_b(i)); }
 void SBC_imm_w(uint16_t v)
 {
     int result;
-    v ^= 0xffff;
+    v ^= 0xFFFF;
 
     if (!P.d)
         result = A.w + v + P.c;
     else
     {
-        result = (A.w & 0x000f) + (v & 0x000f) + (P.c <<  0);
-        if (result <= 0x000f) result -= 0x0006;
-        P.c = result > 0x000f;
-        result = (A.w & 0x00f0) + (v & 0x00f0) + (P.c <<  4) + (result & 0x000f);
-        if (result <= 0x00ff) result -= 0x0060;
-        P.c = result > 0x00ff;
-        result = (A.w & 0x0f00) + (v & 0x0f00) + (P.c <<  8) + (result & 0x00ff);
-        if (result <= 0x0fff) result -= 0x0600;
-        P.c = result > 0x0fff;
-        result = (A.w & 0xf000) + (v & 0xf000) + (P.c << 12) + (result & 0x0fff);
+        result = (A.w & 0x000F) + (v & 0x000F) + (P.c <<  0);
+        if (result <= 0x000F) result -= 0x0006;
+        P.c = result > 0x000F;
+        result = (A.w & 0x00F0) + (v & 0x00F0) + (P.c <<  4) + (result & 0x000F);
+        if (result <= 0x00FF) result -= 0x0060;
+        P.c = result > 0x00FF;
+        result = (A.w & 0x0F00) + (v & 0x0F00) + (P.c <<  8) + (result & 0x00FF);
+        if (result <= 0x0FFF) result -= 0x0600;
+        P.c = result > 0x0FFF;
+        result = (A.w & 0xF000) + (v & 0xF000) + (P.c << 12) + (result & 0x0FFF);
     }
 
     P.v = ~(A.w ^ v) & (A.w ^ result) & 0x8000;
-    if (P.d && result <= 0xffff) result -= 0x6000;
-    P.c = result > 0xffff;
+    if (P.d && result <= 0xFFFF) result -= 0x6000;
+    P.c = result > 0xFFFF;
     P.n = result & 0x8000;
     P.z = (uint16_t)result == 0;
 
