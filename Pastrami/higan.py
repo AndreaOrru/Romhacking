@@ -8,6 +8,8 @@ ignore = []
 
 f = open(argv[1], 'r').read()
 
+f = re.sub(r"0x([0-9a-f]*)", lambda m: '0x' + m.group(1).upper(), f)
+f = re.sub(r"if\(", 'if (', f)
 f = re.sub(r"regs.(\w)", lambda m: m.group(1).upper(), f)
 f = re.sub(r"rd\.(l|w)", 'v', f)
 f = re.sub(r"L ", '  ', f)
@@ -34,8 +36,12 @@ for i in range(len(funs)):
 
         if sz:
             sz_n = (8 if sz == 'b' else 16)
-            funs[i]  = 'inline void %s_imm_%s(uint%d_t v)\n{\n%s}' % (mnem.upper(), sz, sz_n, body)
-            funs[i] += 'inline void {0}_{1}(uint32_t i) {{ {0}_imm_{1}(rd_{1}(i)); }}\n'.format(mnem.upper(), sz)
+            if re.search(r"( v [^=]{0,2}= )|(v\+\+)|(v\-\-)|(\+\+v)|(\-\-v)", body):
+                funs[i]  = 'inline void %s_%s(uint%d_t& v)\n{\n%s}\n' % (mnem.upper(), sz, sz_n, body)
+                funs[i] += 'inline void {0}_{1}(uint32_t i) {{ {0}_{1}(mem_{1}(i)); }}'.format(mnem.upper(), sz)
+            else:
+                funs[i]  = 'inline void %s_imm_%s(uint%d_t v)\n{\n%s}\n' % (mnem.upper(), sz, sz_n, body)
+                funs[i] += 'inline void {0}_{1}(uint32_t i) {{ {0}_imm_{1}(mem_{1}(i)); }}'.format(mnem.upper(), sz)
         else:
             funs[i] = 'inline void %s()\n{\n%s}' % (mnem.upper(), body)
 funs = [x for x in funs if x != '']

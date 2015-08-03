@@ -22,8 +22,8 @@ def parse(ea, sz, mnem, m, x, params):
         params = re.sub(r"(D|S),(.*?)", r"\1 + \2", params)     
         ds = True
     params = re.sub(r"(.*?),(X|Y)", r"\1 + \2%s" % ('.l' if x else '.w'), params)
-    params = re.sub(r"\((.*?)\)", r"rd_w(\1)", params)
-    params = re.sub(r"\[(.*?)\]", r"rd_l(\1)", params)
+    params = re.sub(r"\((.*?)\)", r"mem_w(\1)", params)
+    params = re.sub(r"\[(.*?)\]", r"mem_l(\1)", params)
 
     if (mnem in opA) or (mnem in opX):
         if len(params) > 0:
