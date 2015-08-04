@@ -15,7 +15,7 @@ struct Flags
     inline operator unsigned() const
     {
         return (n << 7) + (v << 6) + (m << 5) + (x << 4)
-             + (d << 3) + (i << 2) + (z << 1) + (c << 0);
+            + (d << 3) + (i << 2) + (z << 1) + (c << 0);
     }
 
     inline auto operator=(uint8_t data) -> unsigned
@@ -306,55 +306,55 @@ inline void ORA_w(uint32_t i) { ORA_imm_w(mem_w(i)); }
 
 inline void SBC_imm_b(uint8_t v)
 {
-  int result;
-  v ^= 0xFF;
+    int result;
+    v ^= 0xFF;
 
-  if (!P.d) {
-    result = A.l + v + P.c;
-  } else {
-    result = (A.l & 0x0F) + (v & 0x0F) + (P.c << 0);
-    if (result <= 0x0F) result -= 0x06;
-    P.c = result > 0x0F;
-    result = (A.l & 0xF0) + (v & 0xF0) + (P.c << 4) + (result & 0x0F);
-  }
+    if (!P.d) {
+        result = A.l + v + P.c;
+    } else {
+        result = (A.l & 0x0F) + (v & 0x0F) + (P.c << 0);
+        if (result <= 0x0F) result -= 0x06;
+        P.c = result > 0x0F;
+        result = (A.l & 0xF0) + (v & 0xF0) + (P.c << 4) + (result & 0x0F);
+    }
 
-  P.v = ~(A.l ^ v) & (A.l ^ result) & 0x80;
-  if (P.d && result <= 0xFF) result -= 0x60;
-  P.c = result > 0xFF;
-  P.n = result & 0x80;
-  P.z = (uint8_t)result == 0;
+    P.v = ~(A.l ^ v) & (A.l ^ result) & 0x80;
+    if (P.d && result <= 0xFF) result -= 0x60;
+    P.c = result > 0xFF;
+    P.n = result & 0x80;
+    P.z = (uint8_t)result == 0;
 
-  A.l = result;
+    A.l = result;
 }
 inline void SBC_b(uint32_t i) { SBC_imm_b(mem_b(i)); }
 
 inline void SBC_imm_w(uint16_t v)
 {
-  int result;
-  v ^= 0xFFFF;
+    int result;
+    v ^= 0xFFFF;
 
-  if (!P.d) {
-    result = A.w + v + P.c;
-  } else {
-    result = (A.w & 0x000F) + (v & 0x000F) + (P.c <<  0);
-    if (result <= 0x000F) result -= 0x0006;
-    P.c = result > 0x000F;
-    result = (A.w & 0x00F0) + (v & 0x00F0) + (P.c <<  4) + (result & 0x000F);
-    if (result <= 0x00FF) result -= 0x0060;
-    P.c = result > 0x00FF;
-    result = (A.w & 0x0F00) + (v & 0x0F00) + (P.c <<  8) + (result & 0x00FF);
-    if (result <= 0x0FFF) result -= 0x0600;
-    P.c = result > 0x0FFF;
-    result = (A.w & 0xF000) + (v & 0xF000) + (P.c << 12) + (result & 0x0FFF);
-  }
+    if (!P.d) {
+        result = A.w + v + P.c;
+    } else {
+        result = (A.w & 0x000F) + (v & 0x000F) + (P.c <<  0);
+        if (result <= 0x000F) result -= 0x0006;
+        P.c = result > 0x000F;
+        result = (A.w & 0x00F0) + (v & 0x00F0) + (P.c <<  4) + (result & 0x000F);
+        if (result <= 0x00FF) result -= 0x0060;
+        P.c = result > 0x00FF;
+        result = (A.w & 0x0F00) + (v & 0x0F00) + (P.c <<  8) + (result & 0x00FF);
+        if (result <= 0x0FFF) result -= 0x0600;
+        P.c = result > 0x0FFF;
+        result = (A.w & 0xF000) + (v & 0xF000) + (P.c << 12) + (result & 0x0FFF);
+    }
 
-  P.v = ~(A.w ^ v) & (A.w ^ result) & 0x8000;
-  if (P.d && result <= 0xFFFF) result -= 0x6000;
-  P.c = result > 0xFFFF;
-  P.n = result & 0x8000;
-  P.z = (uint16_t)result == 0;
+    P.v = ~(A.w ^ v) & (A.w ^ result) & 0x8000;
+    if (P.d && result <= 0xFFFF) result -= 0x6000;
+    P.c = result > 0xFFFF;
+    P.n = result & 0x8000;
+    P.z = (uint16_t)result == 0;
 
-  A.w = result;
+    A.w = result;
 }
 inline void SBC_w(uint32_t i) { SBC_imm_w(mem_w(i)); }
 
@@ -504,15 +504,15 @@ inline void XBA()
 }
 
 inline void T_b(Register& from, Register& to) {
-  to.l = from.l;
-  P.n = (to.l & 0x80);
-  P.z = (to.l == 0);
+    to.l = from.l;
+    P.n = (to.l & 0x80);
+    P.z = (to.l == 0);
 }
 
 inline void T_w(Register& from, Register& to) {
-  to.w = from.w;
-  P.n = (to.w & 0x8000);
-  P.z = (to.w == 0);
+    to.w = from.w;
+    P.n = (to.w & 0x8000);
+    P.z = (to.w == 0);
 }
 
 inline void TAX_b() { T_b(A, X); }
