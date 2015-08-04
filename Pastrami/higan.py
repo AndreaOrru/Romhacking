@@ -37,7 +37,7 @@ for i in range(len(funs)):
 
         if sz:
             sz_n = (8 if sz == 'b' else 16)
-            if re.search(r"( v [^=]{0,2}= )|(v\+\+)|(v\-\-)|(\+\+v)|(\-\-v)", body):
+            if not mnem == 'sbc' and re.search(r"( v [^=]{0,2}= )|(v\+\+)|(v\-\-)|(\+\+v)|(\-\-v)", body):
                 funs[i]  = 'inline void %s_%s(uint%d_t& v)\n{\n%s}\n' % (mnem.upper(), sz, sz_n, body)
                 funs[i] += 'inline void {0}_{1}(uint32_t i) {{ {0}_{1}(mem_{1}(i)); }}'.format(mnem.upper(), sz)
             else:

@@ -20,6 +20,10 @@ def parse(ea, sz, mnem, m, x, params):
         return 'PHK(0x%X);' % (ea >> 16)
     elif mnem == 'PHP':
         return 'PHP(%d, %d);' % (m, x)
+    elif mnem == 'INC' and not params:
+        return 'INC_%s(A.%s);' % ('b' if m else 'w', 'l' if m else 'w')
+    elif mnem in ('INX', 'INY', 'DEX', 'DEY'):
+        return '%sC_%s(%s.%s);' % (mnem[:2], 'b' if x else 'w', mnem[2], 'l' if x else 'w')
 
     # Substitute various symbols:
     ds = False  # ds = do the parameters include D or S?
@@ -58,6 +62,12 @@ for f in Functions():
 
 # Write the C++ source code of the ROM:
 out = open('source.cpp', 'w')
+out.write('#include "ida.hpp"\n#include "w65816.hpp"\n\n')
+
+for f in functions:
+    out.write('void %s();\n' % f)
+out.write('\n')
+
 for f in functions:
     out.write('void %s()\n{\n' % f)
     for (ea, sz, m, x, disasm) in functions[f]:

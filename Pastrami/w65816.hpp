@@ -304,61 +304,59 @@ inline void ORA_imm_w(uint16_t v)
 }
 inline void ORA_w(uint32_t i) { ORA_imm_w(mem_w(i)); }
 
-inline void SBC_b(uint8_t& v)
+inline void SBC_imm_b(uint8_t v)
 {
-    int result;
-    v ^= 0xFF;
+  int result;
+  v ^= 0xFF;
 
-    if (!P.d)
-        result = A.l + v + P.c;
-    else
-    {
-        result = (A.l & 0x0F) + (v & 0x0F) + (P.c << 0);
-        if (result <= 0x0F) result -= 0x06;
-        P.c = result > 0x0F;
-        result = (A.l & 0xF0) + (v & 0xF0) + (P.c << 4) + (result & 0x0F);
-    }
+  if (!P.d) {
+    result = A.l + v + P.c;
+  } else {
+    result = (A.l & 0x0F) + (v & 0x0F) + (P.c << 0);
+    if (result <= 0x0F) result -= 0x06;
+    P.c = result > 0x0F;
+    result = (A.l & 0xF0) + (v & 0xF0) + (P.c << 4) + (result & 0x0F);
+  }
 
-    P.v = ~(A.l ^ v) & (A.l ^ result) & 0x80;
-    if (P.d && result <= 0xFF) result -= 0x60;
-    P.c = result > 0xFF;
-    P.n = result & 0x80;
-    P.z = (uint8_t)result == 0;
+  P.v = ~(A.l ^ v) & (A.l ^ result) & 0x80;
+  if (P.d && result <= 0xFF) result -= 0x60;
+  P.c = result > 0xFF;
+  P.n = result & 0x80;
+  P.z = (uint8_t)result == 0;
 
-    A.l = result;
+  A.l = result;
 }
-inline void SBC_b(uint32_t i) { SBC_b(mem_b(i)); }
+inline void SBC_b(uint32_t i) { SBC_imm_b(mem_b(i)); }
 
-inline void SBC_w(uint16_t& v)
+inline void SBC_imm_w(uint16_t v)
 {
-    int result;
-    v ^= 0xFFFF;
+  int result;
+  v ^= 0xFFFF;
 
-    if (!P.d)
-        result = A.w + v + P.c;
-    else
-    {
-        result = (A.w & 0x000F) + (v & 0x000F) + (P.c <<  0);
-        if (result <= 0x000F) result -= 0x0006;
-        P.c = result > 0x000F;
-        result = (A.w & 0x00F0) + (v & 0x00F0) + (P.c <<  4) + (result & 0x000F);
-        if (result <= 0x00FF) result -= 0x0060;
-        P.c = result > 0x00FF;
-        result = (A.w & 0x0F00) + (v & 0x0F00) + (P.c <<  8) + (result & 0x00FF);
-        if (result <= 0x0FFF) result -= 0x0600;
-        P.c = result > 0x0FFF;
-        result = (A.w & 0xF000) + (v & 0xF000) + (P.c << 12) + (result & 0x0FFF);
-    }
+  if (!P.d) {
+    result = A.w + v + P.c;
+  } else {
+    result = (A.w & 0x000F) + (v & 0x000F) + (P.c <<  0);
+    if (result <= 0x000F) result -= 0x0006;
+    P.c = result > 0x000F;
+    result = (A.w & 0x00F0) + (v & 0x00F0) + (P.c <<  4) + (result & 0x000F);
+    if (result <= 0x00FF) result -= 0x0060;
+    P.c = result > 0x00FF;
+    result = (A.w & 0x0F00) + (v & 0x0F00) + (P.c <<  8) + (result & 0x00FF);
+    if (result <= 0x0FFF) result -= 0x0600;
+    P.c = result > 0x0FFF;
+    result = (A.w & 0xF000) + (v & 0xF000) + (P.c << 12) + (result & 0x0FFF);
+  }
 
-    P.v = ~(A.w ^ v) & (A.w ^ result) & 0x8000;
-    if (P.d && result <= 0xFFFF) result -= 0x6000;
-    P.c = result > 0xFFFF;
-    P.n = result & 0x8000;
-    P.z = (uint16_t)result == 0;
+  P.v = ~(A.w ^ v) & (A.w ^ result) & 0x8000;
+  if (P.d && result <= 0xFFFF) result -= 0x6000;
+  P.c = result > 0xFFFF;
+  P.n = result & 0x8000;
+  P.z = (uint16_t)result == 0;
 
-    A.w = result;
+  A.w = result;
 }
-inline void SBC_w(uint32_t i) { SBC_w(mem_w(i)); }
+inline void SBC_w(uint32_t i) { SBC_imm_w(mem_w(i)); }
 
 inline void INC_b(uint8_t& v)
 {
@@ -505,32 +503,32 @@ inline void XBA()
     P.z = (A.l == 0);
 }
 
-inline T_b(Register& from, Register& to) {
+inline void T_b(Register& from, Register& to) {
   to.l = from.l;
   P.n = (to.l & 0x80);
   P.z = (to.l == 0);
 }
 
-inline T_w(Register& from, Register& to) {
+inline void T_w(Register& from, Register& to) {
   to.w = from.w;
   P.n = (to.w & 0x8000);
   P.z = (to.w == 0);
 }
 
-#define TAX_b()  T_b(A, X)
-#define TAX_w()  T_w(A, X)
-#define TAY_b()  T_b(A, Y)
-#define TAY_w()  T_b(A, Y)
-#define TXA_b()  T_b(X, A)
-#define TXA_w()  T_w(X, A)
-#define TYA_b()  T_b(Y, A)
-#define TYA_w()  T_b(Y, A)
-#define TXY_b()  T_b(X, Y)
-#define TXY_w()  T_w(X, Y)
-#define TYX_b()  T_b(Y, X)
-#define TYX_w()  T_b(Y, X)
-#define TCD()    T_w(A, D)
-#define TDC()    T_w(D, A)
+inline void TAX_b() { T_b(A, X); }
+inline void TAX_w() { T_w(A, X); }
+inline void TAY_b() { T_b(A, Y); }
+inline void TAY_w() { T_b(A, Y); }
+inline void TXA_b() { T_b(X, A); }
+inline void TXA_w() { T_w(X, A); }
+inline void TYA_b() { T_b(Y, A); }
+inline void TYA_w() { T_b(Y, A); }
+inline void TXY_b() { T_b(X, Y); }
+inline void TXY_w() { T_w(X, Y); }
+inline void TYX_b() { T_b(Y, X); }
+inline void TYX_w() { T_b(Y, X); }
+inline void TCD()   { T_w(A, D); }
+inline void TDC()   { T_w(D, A); }
 
 inline void TCS()
 {
@@ -557,6 +555,19 @@ inline void TXS()
 {
     S.w = X.w;
 }
+
+inline void PHA_b() { mem_b(S.w--) = A.l; }
+inline void PHA_w() { mem_b(S.w--) = A.h; mem_b(S.w--) = A.l; }
+inline void PHX_b() { mem_b(S.w--) = X.l; }
+inline void PHX_w() { mem_b(S.w--) = X.h; mem_b(S.w--) = X.l; }
+inline void PHY_b() { mem_b(S.w--) = Y.l; }
+inline void PHY_w() { mem_b(S.w--) = Y.h; mem_b(S.w--) = Y.l; }
+inline void PLA_b() { A.l = mem_b(++S.w); }
+inline void PLA_w() { A.l = mem_b(++S.w); A.h = mem_b(++S.w); }
+inline void PLX_b() { X.l = mem_b(++S.w); }
+inline void PLX_w() { X.l = mem_b(++S.w); X.h = mem_b(++S.w); }
+inline void PLY_b() { Y.l = mem_b(++S.w); }
+inline void PLY_w() { Y.l = mem_b(++S.w); Y.h = mem_b(++S.w); }
 
 inline void PHD()
 {
@@ -592,8 +603,8 @@ inline void PLD()
 inline void PLB()
 {
     B = mem_b(++S.w) << 16;
-    P.n = (b & 0x800000);
-    P.z = (b == 0);
+    P.n = (B & 0x800000);
+    P.z = (B == 0);
 }
 
 inline void PLP()
@@ -623,3 +634,12 @@ inline void CLD() { P.d = 0; }
 inline void CLV() { P.v = 0; }
 inline void SEC() { P.c = 1; }
 inline void SED() { P.d = 1; }
+
+inline void STA_b(uint32_t i) { mem_b(i) = A.w; }
+inline void STA_w(uint32_t i) { mem_w(i) = A.l; }
+inline void STZ_b(uint32_t i) { mem_b(i) = 0;   }
+inline void STZ_w(uint32_t i) { mem_w(i) = 0;   }
+inline void STX_b(uint32_t i) { mem_b(i) = X.w; }
+inline void STX_w(uint32_t i) { mem_w(i) = X.l; }
+inline void STY_b(uint32_t i) { mem_b(i) = Y.w; }
+inline void STY_w(uint32_t i) { mem_w(i) = Y.l; }
