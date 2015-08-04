@@ -1,25 +1,30 @@
 import re
 
 # Instructions whose size depends on the value of P.m:
-opA = ['ADC', 'AND', 'ASL', 'BIT', 'CMP', 'DEC', 'EOR', 'INC', 'LDA', 'LSR', 'ORA',
-       'PHA', 'PLA', 'ROL', 'ROR', 'SBC', 'STA', 'STZ', 'TRB', 'TSB']
+opA = ('ADC', 'AND', 'ASL', 'BIT', 'CMP', 'DEC', 'EOR', 'INC', 'LDA', 'LSR', 'ORA',
+       'PHA', 'PLA', 'ROL', 'ROR', 'SBC', 'STA', 'STZ', 'TRB', 'TSB')
 
 # Instructions whose size depends on the value of P.x:
-opX = ['CPX', 'CPY', 'DEX', 'DEY', 'INX', 'INY', 'LDX', 'LDY', 'PHX', 'PHY', 'PLX',
-       'PLY', 'STX', 'STY', 'TSX']
+opX = ('CPX', 'CPY', 'DEX', 'DEY', 'INX', 'INY', 'LDX', 'LDY', 'PHX', 'PHY', 'PLX',
+       'PLY', 'STX', 'STY', 'TSX')
 
 # Convert an ASM instruction to C++:
 def parse(ea, sz, mnem, m, x, params):
     # Special cases:
+    if re.match(r"\w+", params):
+        if mnem in ('JMP', 'BRA'):
+            return 'goto %s;' % params
+        elif mnem == 'JSR':
+            return '%s();' % params
     if mnem == 'PHK':
         return 'PHK(0x%X);' % (ea >> 16)
-    elif mnem == 'JSR' and re.match(r"\w+", params):
-        return '%s();' % params
-    
+    elif mnem == 'PHP':
+        return 'PHP(%d, %d);' % (m, x)
+
     # Substitute various symbols:
     ds = False  # ds = do the parameters include D or S?
     if re.match(r"(D|S),(.*?)", params):
-        params = re.sub(r"(D|S),(.*?)", r"\1 + \2", params)     
+        params = re.sub(r"(D|S),(.*?)", r"\1 + \2", params)
         ds = True
     params = re.sub(r"(.*?),(X|Y)", r"\1 + \2%s" % ('.l' if x else '.w'), params)
     params = re.sub(r"\((.*?)\)", r"mem_w(\1)", params)
@@ -35,7 +40,7 @@ def parse(ea, sz, mnem, m, x, params):
                 params = re.sub(r"\$(\w+)", r"B + $\1", params)
         # Specify the size of the instruction target:
         mnem += '_b' if (m if mnem in opA else x) else '_w'
-    
+
     # Substitute constant and hex symbols:
     params = params.replace('$', '0x')
     params = params.replace('#', '')
@@ -61,15 +66,17 @@ for f in functions:
             out.write('%s:\n' % Name(ea))
         # Split the line in its components:
         mnem, params, comment = re.match(r"(\w+)\s+(.*?)\s*(;.*)", disasm).groups()[:3]
-        
+
         # Get the C++ equivalent:
-        if mnem == 'NOP':
+        if mnem == 'NOP' or (mnem in ('REP', 'SEP') and params in ('#$10', '#$20', '#$30')):
             continue
-        elif mnem in ('RTS', 'RTL'):
+        elif mnem in ('XCE', 'CLI', 'SEI', 'BRK', 'COP', 'WAI'):
+            opcode = '// ' + mnem
+        elif mnem in ('RTS', 'RTL', 'RTI'):
             opcode = 'return;'
         else:
             opcode = parse(ea, sz, mnem, m, x, params)
-        
+
         comment = comment[comment.rfind(';')+1:]
         out.write('    {0: <40}//{1}\n'.format(opcode, comment))
     out.write('}\n\n')

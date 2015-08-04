@@ -8,14 +8,15 @@ ignore = []
 
 f = open(argv[1], 'r').read()
 
+f = re.sub(r"\((u?)int(\d+)\)", r"(\1int\2_t)", f)
 f = re.sub(r"0x([0-9a-f]*)", lambda m: '0x' + m.group(1).upper(), f)
 f = re.sub(r"if\(", 'if (', f)
 f = re.sub(r"regs.(\w)", lambda m: m.group(1).upper(), f)
 f = re.sub(r"rd\.(l|w)", 'v', f)
 f = re.sub(r"L ", '  ', f)
 f = re.sub(r"\s+op_io(.*?)\(\);", '', f)
-f = re.sub(r"op_readstackn?\(\)", 'rd_b(++S.w)', f)
-f = re.sub(r"op_writestackn?\((.*)\)", r"wr_b(S.w--, \1)", f)
+f = re.sub(r"op_readstackn?\(\)", 'mem_b(++S.w)', f)
+f = re.sub(r"op_writestackn?\((.*)\)", r"mem_b(S.w--, \1)", f)
 
 funs = [x.strip() for x in re.split('auto R65816::op_', f) if x != '']
 for i in range(len(funs)):
