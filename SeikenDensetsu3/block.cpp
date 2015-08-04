@@ -26,21 +26,17 @@ vector<Block>* Block::extract_blocks(const uint8_t* rom)
     }
     blocksMap.erase(0x390055);
     blocksMap.erase(0x394C2D);
-    blocksMap.erase(0x3B0003);
-    for (auto& i: blocksMap)
-    {
-        printf("%x: %x\n", i.first, i.second);
-    }
-
+//    blocksMap.erase(0x3B0003);
 
     auto* blocks = new vector<Block>;
     for (auto& block: blocksMap)
     {
         uint16_t    i = block.second;
         uint32_t addr = block.first;
-        bool   isText = addr < 0x3BD079 and !(addr >= 0x3B0000 and addr < 0x3B4C2E);
-        if (block.second >= 0x1000)
-            isText = false;
+//        bool   isText = addr < 0x3BD079 and !(addr >= 0x3B0000 and addr < 0x3B4C2E);
+//        if (block.second >= 0x1000)
+//            isText = false;
+        bool isText = true;
 
         blocks->emplace_back(rom, i, addr, isText);
     }
@@ -124,7 +120,7 @@ void Block::decompress()
 
 bool Block::check(vector<uint8_t>::const_iterator begin, vector<uint8_t>::const_iterator end)
 {
-    if (*begin == 0xF2)
+/*    if (*begin == 0xF2)
         return *(begin+1) == 0x0E and find(begin, end, 0x14) != end;
 
     if (*begin == 0xF3)
@@ -143,7 +139,7 @@ bool Block::check(vector<uint8_t>::const_iterator begin, vector<uint8_t>::const_
 
     if (*begin != 0x7B and not ((*(begin+1) >= 0x10 and *(begin+1) <= 0x1F) or
                                 (*(begin+1) >= 0xC0 and *(begin+1) <= 0xCF)))
-        return false;
+                                return false;*/
 
     return true;
 }
