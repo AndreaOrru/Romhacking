@@ -33,10 +33,9 @@ vector<Block>* Block::extract_blocks(const uint8_t* rom)
     {
         uint16_t    i = block.second;
         uint32_t addr = block.first;
-//        bool   isText = addr < 0x3BD079 and !(addr >= 0x3B0000 and addr < 0x3B4C2E);
-//        if (block.second >= 0x1000)
-//            isText = false;
-        bool isText = true;
+        bool   isText = addr < 0x3BD079 and !(addr >= 0x3B0000 and addr < 0x3B4C2E);
+        if (block.second >= 0x1000)
+            isText = false;
 
         blocks->emplace_back(rom, i, addr, isText);
     }
@@ -120,7 +119,7 @@ void Block::decompress()
 
 bool Block::check(vector<uint8_t>::const_iterator begin, vector<uint8_t>::const_iterator end)
 {
-/*    if (*begin == 0xF2)
+    if (*begin == 0xF2)
         return *(begin+1) == 0x0E and find(begin, end, 0x14) != end;
 
     if (*begin == 0xF3)
@@ -139,7 +138,11 @@ bool Block::check(vector<uint8_t>::const_iterator begin, vector<uint8_t>::const_
 
     if (*begin != 0x7B and not ((*(begin+1) >= 0x10 and *(begin+1) <= 0x1F) or
                                 (*(begin+1) >= 0xC0 and *(begin+1) <= 0xCF)))
-                                return false;*/
+        return false;
+
+    if ((*begin == 0x58 or *begin == 0x5E) and (*(begin+1) == 0x18 and *(begin+2) == 0xF4 and
+                                                *(begin+3) == 0x00))
+        return false;
 
     return true;
 }

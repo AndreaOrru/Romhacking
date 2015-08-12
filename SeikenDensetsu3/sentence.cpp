@@ -77,13 +77,13 @@ void Sentence::format()
     text = regex_replace(text, regex("<F8><01>"),                  "<MULTI>");
     text = regex_replace(text, regex("<F3><00>"),                  "<CHOICE>");
 
-    text = regex_replace(text, regex("\\{((((.|\n)*?)<END>){6})"), "<ALTERN>$1");
+    text = regex_replace(text, regex("\\{((((.|\n)*?)<END>){6})"), "<ALT>$1");
     text = regex_replace(text, regex("(X|\\^)((.|\n)*?)<END>"),    "<$1>$2<END>");
 
     text = regex_replace(text, regex("<X>"),                       "<BOX>");
     text = regex_replace(text, regex("<\\^>"),                     "<LINE>");
 
-    char header[32];
+    char header[64];
     sprintf(header, "[Sentence $%X:%x]\n", block, index);
     text.insert(0, header);
     text.append("[/Sentence]\n");
@@ -95,7 +95,7 @@ vector<uint8_t>* Sentence::unformat(string& content)
 
     content = regex_replace(content, regex("<LINE>"),    "^");
     content = regex_replace(content, regex("<BOX>"),     "X");
-    content = regex_replace(content, regex("<ALTERN>"),  "{");
+    content = regex_replace(content, regex("<ALT>"),     "{");
     content = regex_replace(content, regex("<CHOICE>"),  "<F3><00>");
     content = regex_replace(content, regex("<MULTI>"),   "<F8><01>");
     content = regex_replace(content, regex("<END>\n?"),  "<FF><FF>");
