@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <fstream>
-#include <string>
 #include <vector>
 #include "block.hpp"
 #include "rom.hpp"
@@ -23,7 +22,7 @@ int main(int argc, char* argv[])
         FILE* dump = fopen(argv[3], "w");
 
         for (auto& sentence: sentences)
-            fprintf(dump, "[String $%X (%X), $%X-%X]\n%s\n", sentence.block->index, sentence.block->begin,
+            fprintf(dump, "[String $%X ($%X), $%X-%X]\n%s\n", sentence.block->indexes[0], sentence.block->begin,
                     sentence.begin, sentence.end, sentence.text.c_str());
         fclose(dump);
     }

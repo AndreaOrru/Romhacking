@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <iterator>
+#include <map>
 #include "block.hpp"
 #include "bytepair.hpp"
 #include "huffman.hpp"
@@ -22,24 +24,17 @@ void Block::insert_blocks(vector<Block>& blocks, const char* outname)
 
         b.begin += diff;
         b.end    = b.begin + datas[i].size();
-
         diff += datas[i].size() - old_size;
 
-        if (b.index < 0x1000)
+        for (auto index: b.indexes)
         {
-            fseek(out, 0x3E2E00 + b.index*2, SEEK_SET);
-            fputc( b.begin       & 0xFF, out);
+            fseek(out, 0x3E2E00 + index*2, SEEK_SET);
+            fputc( b.begin &       0xFF, out);
             fputc((b.begin >> 8) & 0xFF, out);
 
-            fseek(out, 0x3E4E00 + b.index/2, SEEK_SET);
-            fputc((ROM::rd(0x3E4E00 + b.index/2) & 0xF0) |
+            fseek(out, 0x3E4E00 + index/2, SEEK_SET);
+            fputc((ROM::rd(0x3E4E00 + index/2) & 0xF0) |
                   (((b.begin >> 16) - 0x38) & 0xF), out);
-        }
-        else
-        {
-            fseek(out, 0x4BF7C + (b.index - 0x1000)*2, SEEK_SET);
-            fputc( b.begin       & 0xFF, out);
-            fputc((b.begin >> 8) & 0xFF, out);
         }
 
         fseek(out, b.begin, SEEK_SET);
@@ -58,15 +53,20 @@ void Block::insert_blocks(vector<Block>& blocks, const char* outname)
 
 vector<Block> Block::extract_blocks()
 {
-    vector<Block> blocks;
+    map<int,Block> blocks;
 
     for (int i = 0; i < 0x1000; i++)
     {
         u8    bank = ROM::rd(0xEA91 + (ROM::rd(0x3E4E00 + i/2) & 0xF));
         u16 offset = ROM::rd_w(0x3E2E00 + i*2);
         int   addr = ((bank << 16) | offset) - 0xC00000;
+
+        map<int,Block>::iterator it;
         if (i != 0x827 and i != 0x855)
-            blocks.push_back(Block(i, addr));
+            if ((it = blocks.find(addr)) != blocks.end())
+                it->second.indexes.push_back(i);
+            else
+                blocks.emplace(addr, Block(i, addr));
     }
     /*for (int i = 0; i < 0x1A9; i++)
     {
@@ -74,15 +74,15 @@ vector<Block> Block::extract_blocks()
         int   addr = 0x3B0000 | offset;
         blocks.push_back(Block(i + 0x1000, addr));
     }*/
-    blocks.push_back(Block(blocks.size(), 0x3C0000));
-    sort(blocks.begin(), blocks.end());
 
-    for (size_t i = 0; i < blocks.size() - 1; i++)
+    vector<Block> blocks_vec;
+    transform(blocks.begin(), blocks.end(), back_inserter(blocks_vec), [](pair<const int,Block> &x) { return x.second; });
+
+    for (auto it = blocks_vec.begin(); it != blocks_vec.end(); it++)
     {
-        blocks[i].end  = blocks[i+1].begin;
-        blocks[i].data = Huffman::decompress(blocks[i]);
+        it->end  = (next(it) != blocks_vec.end()) ? next(it)->begin : 0x3C0000;
+        it->data = Huffman::decompress(*it);
     }
-    blocks.pop_back();
 
-    return blocks;
+    return blocks_vec;
 }

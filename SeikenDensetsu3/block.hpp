@@ -5,11 +5,11 @@
 
 struct Block
 {
-    Block(int index, int begin, int end = 0) : index(index), begin(begin), end(end) {};
+    Block(int index, int begin, int end = 0) : indexes(1, index), begin(begin), end(end) {};
     inline bool operator< (const Block& other) const { return begin < other.begin; }
 
   public:
-    int index;
+    std::vector<int> indexes;
     int begin;
     int end;
     std::vector<u8> data;
