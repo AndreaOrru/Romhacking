@@ -1,76 +1,52 @@
 #include <cstdio>
-#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
 #include "block.hpp"
+#include "rom.hpp"
+#include "sentence.hpp"
 
 using namespace std;
 
-size_t read_file(FILE* file, uint8_t*& mem)
+
+int main(int argc, char* argv[])
 {
-    fseek(file, 0, SEEK_END);
-    size_t size = ftell(file);
-    rewind(file);
-
-    mem = new uint8_t[size];
-    fread(mem, 1, size, file);
-    fclose(file);
-
-    return size;
-}
-
-uint8_t* read_file(FILE* file)
-{
-    uint8_t* mem;
-    read_file(file, mem);
-    return mem;
-}
-
-int main(int argc, const char* argv[])
-{
-    if (argc != 4 or (strcmp(argv[1], "-i") and strcmp(argv[1], "-e")))
-    {
-        cerr << "usage: sd3 [-ei] <romfile> <textfile>" << endl;
-        cerr << "options:" << endl;
-        cerr << "  -e   extract from ROM to text"    << endl;
-        cerr << "  -i   (re)insert from text to ROM" << endl << endl;
+    if (argc < 4)
         return 1;
-    }
-    string option = argv[1];
-    auto romName  = argv[2];
-    auto textName = argv[3];
 
-    FILE* romFile = fopen(romName, "rb");
-    if (romFile == NULL)
-    {
-        perror("romfile"); cerr << endl;
-        return 1;
-    }
+    ROM::open(argv[2]);
+    vector<Block> blocks = Block::extract_blocks();
+    vector<Sentence> sentences = Sentence::extract_sentences(blocks);
 
-    FILE* textFile = fopen(textName, (option == "-i") ? "rb" : "wb");
-    if (textFile == NULL)
+    if (string(argv[1]) == "-e")
     {
-        perror("textfile"); cerr << endl;
-        return 1;
+        FILE* dump = fopen(argv[3], "w");
+
+        for (auto& sentence: sentences)
+            fprintf(dump, "[String $%X (%X), $%X-%X]\n%s\n", sentence.block->index, sentence.block->begin,
+                    sentence.begin, sentence.end, sentence.text.c_str());
+        fclose(dump);
     }
 
-    uint8_t* rom;
-    size_t romSize = read_file(romFile, rom);
-    auto* blocks = Block::extract_blocks(rom);
-
-    if (option == "-e")
+    else if (string(argv[1]) == "-i")
     {
-        for (auto& block: *blocks)
-            for (auto& sentence: block.get_sentences())
-                fprintf(textFile, "%s\n", sentence.get_text().c_str());
-    }
+        if (argc < 5)
+            return 1;
 
-    else if (option == "-i")
-    {
-        string text((char*)read_file(textFile));
-        Block::reinsert_blocks(rom, blocks, text);
+        string tmp;
+        ifstream dump(argv[3]);
 
-        romFile = fopen("out.smc", "wb");
-        fwrite(rom, 1, romSize, romFile);
-        fclose(romFile);
+        int i = 0;
+        while (getline(dump, tmp, '\n'))
+        {
+            getline(dump, sentences[i].text, '[');
+            sentences[i].text.resize(sentences[i].text.size() - 1);
+            i++;
+        }
+        dump.close();
+
+        Sentence::insert_sentences(sentences);
+        Block::insert_blocks(blocks, argv[4]);
     }
 
     return 0;

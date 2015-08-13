@@ -1,142 +1,229 @@
-#include <cctype>
-#include <cstdio>
-#include <regex>
+#include <algorithm>
 #include "sentence.hpp"
 
 using namespace std;
 
+
 const string Sentence::names[] = { "DURAN", "KEVIN", "HAWK", "ANGELA", "CARLIE", "LISE" };
 
-Sentence::Sentence(uint16_t block, uint16_t index, uint32_t pos,
-                   vector<uint8_t>::const_iterator begin,
-                   vector<uint8_t>::const_iterator end)
-{
-    this->block = block;
-    this->index = index;
-    this->pos   = pos;
-    this->data  = new vector<uint8_t>(begin, end);
 
-    format();
+void Sentence::insert_sentences(vector<Sentence>& sentences)
+{
+    Block* block = nullptr;
+    int diff = 0;
+
+    for (auto& sentence: sentences)
+    {
+        if (sentence.block != block)
+        {
+            block = sentence.block;
+            diff = 0;
+        }
+
+        sentence.begin += diff;
+        sentence.end   += diff;
+
+        block->data.erase(block->data.begin() + sentence.begin,
+                          block->data.begin() + sentence.end);
+
+        vector<u8> data = sentence.unstringify();
+        diff += data.size() - (sentence.end - sentence.begin);
+        sentence.end = sentence.begin + data.size();
+
+        block->data.insert(block->data.begin() + sentence.begin,
+                           data.begin(), data.end());
+    }
 }
 
-map<pair<uint16_t,uint16_t>,vector<uint8_t>*>* Sentence::extract_sentences(const string& text)
+vector<Sentence> Sentence::extract_sentences(vector<Block>& blocks)
 {
-    auto* sentences = new map<pair<uint16_t,uint16_t>,vector<uint8_t>*>;
+    vector<Sentence> sentences;
 
-    regex sentenceRegex("\\[Sentence \\$([0-9A-F]+):([0-9a-f]+)\\]\n((.|\n)*?)\n\\[/Sentence\\]");
-    auto begin = sregex_iterator(text.begin(), text.end(), sentenceRegex);
-    auto   end = sregex_iterator();
-    smatch m;
-
-    for (auto i = begin; i != end; i++)
+    for (auto& block: blocks)
     {
-        m = *i;
-
-        uint16_t block = stoi(m[1], 0, 16);
-        uint16_t index = stoi(m[2], 0, 16);
-        string content = m[3];
-        sentences->emplace(make_pair(make_pair(block, index),
-                                     unformat(content)));
+        int i = 0;
+        while (i < block.data.size())
+        {
+            u8 b = block.data[i];
+            if (b == 0x58 or b == 0x5E or b == 0x7B or b == 0xF2 or
+                b == 0xF3 or b == 0xF8 or b == 0xFA)
+            {
+                int end = try_sentence(block.data, i);
+                if (end)
+                {
+                    sentences.emplace_back(&block, i, end);
+                    sentences.back().stringify();
+                    i = end;
+                    continue;
+                }
+            }
+            i += 1;
+        }
     }
-
     return sentences;
 }
 
-string Sentence::stringify(uint8_t c)
+bool Sentence::check(vector<u8>::iterator begin, vector<u8>::iterator end)
 {
-    switch (c)
+    int printable = 0;
+    for (auto it = begin+1; it < end; it++)
+        if (*it == 0x17 or (*it >= 0x20 and *it <= 0x7E))
+            printable++;
+    if (printable == 0)
+        return false;
+
+    auto in = [=](vector<u8> seq)
+        { return search(begin+1, end, seq.begin(), seq.end()) != end; };
+
+    if (in({0x58, 0x10}) or in({0x5E, 0x10}))
+        return false;
+    if (*begin >= 0xF2 and (!in({0x14}) or in({0x12}) or in({0x11, 0xFF, 0xFF})))
+        return false;
+
+    return true;
+}
+
+int Sentence::try_sentence(vector<u8>& data, int begin)
+{
+    int n = (data[begin] == 0x7B) ? 6 : 1;
+    int i = begin;
+
+    while (n > 0)
     {
-        case 0x10:  return "<OPEN>";
-        case 0x11:  return "<CLOSE>";
-        case 0x12:  return "<PAGE>\n";
-        case 0x14:  return "<OR>";
-        case 0x17:  return "\n";
-        case 0x18:  return "<WAIT>";
-        case  '_':  return "...";
-        default:
-            if (isprint(c))
-                return string(1, c);
-            else
-            {
-                char s[5];
-                sprintf(s, "<%.2X>", c);
-                return string(s);
-            }
+        while (true)
+        {
+            if (i+1 >= data.size())
+                return 0;
+            if (data[i] == 0xFF and data[i+1] == 0xFF)
+                break;
+            i++;
+        }
+
+        i += 2;
+        n--;
+    }
+
+    return check(data.begin() + begin, data.begin() + i) ? i : 0;
+}
+
+void Sentence::stringify()
+{
+    vector<u8>& data = block->data;
+    int i = begin;
+
+         if (data[i] == 0x58) { text = "<BOX>" ; i++; }
+    else if (data[i] == 0x5E) { text = "<LINE>"; i++; }
+    else if (data[i] == 0x7B) { text = "<ALT>" ; i++; }
+
+    for (; i < end; i++)
+    {
+        if (i+2 < data.size() and data[i] == 0x19 and data[i+1] == 0xF8 and data[i+2] < 6)
+        {
+            text += "<" + names[data[i+2]] + ">"; i += 2;
+        }
+
+        else if (data[i] == 0x10) text += "<OPEN>";
+        else if (data[i] == 0x11) text += "<CLOSE>";
+        else if (data[i] == 0x12) text += "<PAGE>\n";
+        else if (data[i] == 0x14) text += "<OR>";
+        else if (data[i] == 0x17) text += '\n';
+        else if (data[i] == 0x18) text += "<WAIT>";
+        else if (data[i] == '_' ) text += "...";
+
+        else if (i+1 < data.size() and data[i] == 0xFF and data[i+1] == 0xFF)
+        {
+            text += "<END>\n"; i++;
+        }
+        else if (i+1 < data.size() and data[i] == 0xF8 and data[i+1] == 0x01)
+        {
+            text += "<MULTI>"; i++;
+        }
+        else if (i+1 < data.size() and data[i] == 0xF3 and data[i+1] == 0x00)
+        {
+            text += "<CHOICE>"; i++;
+        }
+
+        else if (data[i] >= 0x20 and data[i] <= 0x7E and
+                 data[i] != '['  and data[i] != ']'  and
+                 data[i] != '<'  and data[i] != '>')
+        {
+            text += data[i];
+        }
+        else
+        {
+            char s[5];
+            sprintf(s, "<%.2X>", data[i]);
+            text.append(s);
+        }
     }
 }
 
-void Sentence::format()
+vector<u8> Sentence::unstringify()
 {
-    for (auto c: *data)
-        text += stringify(c);
+    vector<u8> data;
 
-    for (int i = 0; i < 6; i++)
-        text = regex_replace(text, regex("<19><F8><0"+ to_string(i) +">"), "<"+ names[i] +">");
-
-    text = regex_replace(text, regex("<FF><FF>"),                  "<END>\n");
-    text = regex_replace(text, regex("<F8><01>"),                  "<MULTI>");
-    text = regex_replace(text, regex("<F3><00>"),                  "<CHOICE>");
-
-    text = regex_replace(text, regex("\\{((((.|\n)*?)<END>){6})"), "<ALT>$1");
-    text = regex_replace(text, regex("(X|\\^)((.|\n)*?)<END>"),    "<$1>$2<END>");
-
-    text = regex_replace(text, regex("<X>"),                       "<BOX>");
-    text = regex_replace(text, regex("<\\^>"),                     "<LINE>");
-
-    char header[64];
-    sprintf(header, "[Sentence $%X:%x]\n", block, index);
-    text.insert(0, header);
-    text.append("[/Sentence]\n");
-}
-
-vector<uint8_t>* Sentence::unformat(string& content)
-{
-    auto* data = new vector<uint8_t>;
-
-    content = regex_replace(content, regex("<LINE>"),    "^");
-    content = regex_replace(content, regex("<BOX>"),     "X");
-    content = regex_replace(content, regex("<ALT>"),     "{");
-    content = regex_replace(content, regex("<CHOICE>"),  "<F3><00>");
-    content = regex_replace(content, regex("<MULTI>"),   "<F8><01>");
-    content = regex_replace(content, regex("<END>\n?"),  "<FF><FF>");
-
-    for (int i = 0; i < 6; i++)
-        content = regex_replace(content, regex("<"+ names[i] +">"), "<19><F8><0"+ to_string(i) +">");
-
-    content = regex_replace(content, regex("<OPEN>"),    "<10>");
-    content = regex_replace(content, regex("<CLOSE>"),   "<11>");
-    content = regex_replace(content, regex("<PAGE>\n?"), "<12>");
-    content = regex_replace(content, regex("<OR>"),      "<14>");
-    content = regex_replace(content, regex("<WAIT>"),    "<18>");
-    content = regex_replace(content, regex("\\.\\.\\."), "_");
-    content = regex_replace(content, regex("\n"),        "<17>");
-
-    for (auto it = content.begin(); it < content.end(); it++)
-        if (*it != '<')
-            data->push_back(*it);
+    for (size_t i = 0; i < text.size(); i++)
+    {
+        if (text[i] != '<')
+        {
+            if (text[i] == '\n')
+                data.push_back(0x17);
+            else if (!text.compare(i, 3, "..."))
+            {
+                data.push_back('_'); i += 2;
+            }
+            else
+                data.push_back((u8) text[i]);
+        }
         else
         {
-            // Assume (it+2) is in range.
-            data->push_back(stoi(string(it+1, it+3), 0, 16));
-            it += 3;
+            i++;
+            unsigned sz = text.find('>', i) - i;
+            bool nl = false;
+
+                 if (!text.compare(i, sz, "BOX"))    data.push_back(0x58);
+            else if (!text.compare(i, sz, "LINE"))   data.push_back(0x5E);
+            else if (!text.compare(i, sz, "ALT"))    data.push_back(0x7B);
+            else if (!text.compare(i, sz, "OPEN"))   data.push_back(0x10);
+            else if (!text.compare(i, sz, "CLOSE"))  data.push_back(0x11);
+            else if (!text.compare(i, sz, "PAGE")) { data.push_back(0x12); nl = true; }
+            else if (!text.compare(i, sz, "OR"))     data.push_back(0x14);
+            else if (!text.compare(i, sz, "WAIT"))   data.push_back(0x18);
+
+            else if (!text.compare(i, sz, "END"))
+            {
+                data.push_back(0xFF); data.push_back(0xFF); nl = true;
+            }
+            else if (!text.compare(i, sz, "MULTI"))
+            {
+                data.push_back(0xF8); data.push_back(0x01);
+            }
+            else if (!text.compare(i, sz, "CHOICE"))
+            {
+                data.push_back(0xF3); data.push_back(0x00);
+            }
+            else
+            {
+                u8 n;
+                for (n = 0; n < 6; n++)
+                    if (!text.compare(i, sz, names[n]))
+                        break;
+                if (n < 6)
+                {
+                    data.push_back(0x19); data.push_back(0xF8); data.push_back(n);
+                }
+                else
+                {
+                    u8 v; sscanf(&text.c_str()[i], "%hhX", &v);
+                    data.push_back(v);
+                }
+            }
+
+            i += sz;
+            if (nl and text.at(i+1) == '\n')
+                i++;
         }
+    }
 
     return data;
-}
-
-const string& Sentence::get_text()
-{
-    if (text.empty())
-        format();
-
-    return text;
-}
-
-void Sentence::set_data(vector<uint8_t>* data)
-{
-    if (this->data)
-        delete this->data;
-
-    this->data = data;
-    text.clear();
 }

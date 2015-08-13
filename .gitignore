@@ -1,6 +1,8 @@
 .sconsign.dblite
+.idea
 
 *.o
 *.out
 
 *.smc
+*.sfc

@@ -8,7 +8,7 @@ namespace ROM
 {
 
 u8* rom;
-size_t size;
+int size;
 
 
 void open(const char* fname)
@@ -20,7 +20,7 @@ void open(const char* fname)
     rewind(file);
 
     rom = new u8[size];
-    fread(rom, 1, size, file);
+    fread(rom, 1, (size_t) size, file);
     fclose(file);
 }
 
@@ -29,17 +29,17 @@ const u8* get_rom()
     return rom;
 }
 
-size_t get_size()
+int get_size()
 {
     return size;
 }
 
-u8 rd(u32 addr)
+u8 rd(int addr)
 {
     return rom[addr];
 }
 
-u16 rd_w(u32 addr)
+u16 rd_w(int addr)
 {
     return *((u16*) &rom[addr]);
 }

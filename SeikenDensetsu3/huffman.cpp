@@ -1,25 +1,29 @@
 #include <queue>
 #include "bytepair.hpp"
+#include "rom.hpp"
 #include "huffman.hpp"
 
 using namespace std;
+
 
 namespace Huffman
 {
 
 struct Node
 {
-    int sym = 0;
-    int weight = 0;
+    u16 symbol;
+    int weight;
 
-    uint64_t bits = 0;
-    int nBits = 0;
+    u64 bits   = 0;
+    int n_bits = 0;
 
-    Node* parent = 0;
-    Node* left   = 0;
-    Node* right  = 0;
+    Node* parent = nullptr;
+    Node* left   = nullptr;
+    Node* right  = nullptr;
 
-    Node(int sym, int weight) : sym(sym), weight(weight) {};
+    inline bool is_leaf() const { return (left == nullptr && right == nullptr); }
+
+    Node(u16 symbol, int weight) : symbol(symbol), weight(weight) {};
     Node(Node* l, Node* r) : left(l), right(r)
     {
         l->parent = r->parent = this;
@@ -27,117 +31,98 @@ struct Node
     }
     ~Node()
     {
-        if (left)  delete left;
-        if (right) delete right;
+        if (left  != nullptr) delete left;
+        if (right != nullptr) delete right;
     }
 };
 
 
-uint16_t xba(uint16_t v)
-{
-    uint8_t l =  v & 0x00FF;
-    uint8_t h = (v & 0xFF00) >> 8;
+vector<u16> encoded_tree;
 
-    return (l << 8) | h;
+
+const vector<u16>& get_encoded_tree()
+{
+    return encoded_tree;
 }
 
-vector<uint16_t>* encode_tree(Node* tree)
+vector<u16> encode_tree(const Node* tree)
 {
-    auto* encoding = new vector<uint16_t>;
-
-    queue<Node*> q;
+    vector<u16> data;
     queue<int> tags;
+    queue<const Node*> q;
 
     q.push(tree);
     while (not q.empty())
     {
-        Node* n = q.front(); q.pop();
+        const Node* n = q.front(); q.pop();
 
-        if (!n->left and !n->right)
+        if (n->is_leaf())
         {
-            encoding->at(tags.front()) = 0x8000 | n->sym;
+            data[tags.front()] = (u16) (0x8000 | n->symbol);
             tags.pop();
         }
         else
         {
             if (not tags.empty())
             {
-                encoding->at(tags.front()) = encoding->size()*2 + 0x1200;
+                data[tags.front()] = (u16) (0x1200 + 2*data.size());
                 tags.pop();
             }
-            if (n->left != 0)
-            {
-                tags.push(encoding->size());
-                encoding->push_back(0x0000);
-            }
-            if (n->right != 0)
-            {
-                tags.push(encoding->size());
-                encoding->push_back(0x0000);
-            }
-        }
-        if (n->left)
+            tags.push(data.size());
+            data.push_back(0x0000);
+            tags.push(data.size());
+            data.push_back(0x0000);
+
             q.push(n->left);
-        if (n->right)
             q.push(n->right);
-    }
-
-    return encoding;
-}
-
-void encode_data(vector<vector<uint16_t>*>& blocksData, vector<Node*>& nodes)
-{
-    for (int i = 0; i < blocksData.size(); i++)
-    {
-        //blocksData[i]->push_back(0x100);
-        auto* compr = new vector<uint16_t>;
-        int b = 0;
-
-        for (auto sym: *blocksData[i])
-        {
-            uint64_t bits = nodes[sym]->bits;
-            int   toWrite = nodes[sym]->nBits;
-
-            while (toWrite > 0)
-            {
-                compr->resize(b/16 + 1, 0);
-
-                int canWrite = 16 - b%16;
-                if (toWrite <= canWrite)
-                    compr->at(b/16) |= (bits << (canWrite - toWrite));
-                else
-                    compr->at(b/16) |= (bits >> (toWrite - canWrite));
-                b += min(toWrite, canWrite);
-                toWrite -= min(toWrite, canWrite);
-            }
         }
-
-        delete blocksData[i];
-        for (auto& v: *compr)
-            v = xba(v);
-        blocksData[i] = compr;
     }
+    return data;
 }
 
-vector<uint16_t>* compress(vector<vector<uint16_t>*>& blocksData)
+vector<u8> encode_data(const list<u16>& data, const vector<Node*>& leaves)
 {
-    vector<int> occ(0x0580, 0);
-    vector<Node*> nodes(0x0580, 0);
+    vector<u8> out;
+    unsigned b = 0;
 
-    for (auto* block: blocksData)
-        for (auto sym: *block)
-            occ[sym]++;
+    for (auto v: data)
+    {
+        u64 bits     = leaves[v]->bits;
+        int to_write = leaves[v]->n_bits;
+
+        while (to_write > 0)
+        {
+            out.resize(b/8 + 1, 0);
+
+            int can_write = 8 - b%8;
+            if (to_write <= can_write)
+                out[b/8] |= (bits << (can_write - to_write));
+            else
+                out[b/8] |= (bits >> (to_write - can_write));
+            b        += min(to_write, can_write);
+            to_write -= min(to_write, can_write);
+        }
+    }
+    return out;
+}
+
+vector<vector<u8>> compress(const vector<Block>& blocks)
+{
+    vector<Node*> leaves(0x580, nullptr);
+    vector<int> occ(0x580, 0);
+
+    vector<list<u16>> datas = BytePair::compress(blocks);
+
+    for (auto& data: datas)
+        for (auto symbol: data)
+            occ[symbol]++;
 
     auto cmp = [](const Node* x, const Node* y) { return x->weight > y->weight; };
     priority_queue<Node*,vector<Node*>,decltype(cmp)> q(cmp);
 
-    for (int sym = 0; sym < 0x0580; sym++)
-        if (occ[sym] != 0)
-        {
-            auto* n = new Node(sym, occ[sym]);
-            nodes[sym] = n;
-            q.push(n);
-        }
+    for (u16 symbol = 0; symbol < 0x580; symbol++)
+        if (occ[symbol] > 0)
+            q.push(leaves[symbol] = new Node(symbol, occ[symbol]));
 
     while (q.size() >= 2)
     {
@@ -147,64 +132,51 @@ vector<uint16_t>* compress(vector<vector<uint16_t>*>& blocksData)
     }
     Node* tree = q.top();
 
-    for (auto n: nodes)
-        if (n)
-        {
-            Node* p = n;
-            while (p->parent)
-            {
-                n->bits |= (p == p->parent->right) << n->nBits;
-                n->nBits++;
-                p = p->parent;
-            }
-        }
+    for (auto n: leaves)
+        if (n != nullptr)
+            for (Node* p = n; p->parent != nullptr; p = p->parent)
+                n->bits |= (p == p->parent->right) << n->n_bits++;
 
-    auto* encodedTree = encode_tree(tree);
-    encode_data(blocksData, nodes);
+    vector<vector<u8>> encoded_datas;
+    for (auto& data: datas)
+        encoded_datas.push_back(encode_data(data, leaves));
+
+    encoded_tree = encode_tree(tree);
     delete tree;
 
-    return encodedTree;
+    return encoded_datas;
 }
 
-vector<uint8_t>* decompress(const uint16_t* comprData, uint32_t comprSize, const uint16_t* meta)
+vector<u8> decompress(const Block& block)
 {
-    auto* data = new vector<uint8_t>;
+    vector<u8> data;
 
-    uint32_t comprPtr = 0;
-    uint16_t bits;
-    uint8_t i = 1;
+    int i = block.begin;
+    u8 bits = 0;
+    int b = 1;
 
-    while (comprPtr <= comprSize)
+    while (i < block.end)
     {
-        uint16_t metaPtr = meta[0];
+        u16 node = ROM::rd_w(0x3E6600);
 
-        while (not (metaPtr & 0x8000))
+        while (not (node & 0x8000))
         {
-            if (--i == 0)
+            b--;
+            if (b == 0)
             {
-                bits = xba(comprData[comprPtr / 2]);
-                comprPtr += 2;
-                i = 16;
+                bits = ROM::rd(i++);
+                b = 8;
             }
 
-            bool b = bits & 0x8000;
+            if (bits & 0x80)
+                node += 2;
             bits <<= 1;
-
-            if (b)
-                metaPtr += 2;
-
-            metaPtr = meta[metaPtr / 2];
+            node = ROM::rd_w(0x3E6600 + node);
         }
 
-        auto s = BytePair::decompress(metaPtr & 0x7FFF, meta);
-        data->insert(data->end(), s.begin(), s.end());
+        const vector<u8>& s = BytePair::get((u16) (node & 0x7FFF));
+        data.insert(data.end(), s.begin(), s.end());
     }
-
-    //vector<uint8_t> end = { 0xFF, 0xFF };
-    //auto occ = find_end(data->begin(), data->end(), end.begin(), end.end());
-    //if (occ != data->end())
-    //    data->resize(distance(data->begin(), occ) + end.size());
-
     return data;
 }
 
