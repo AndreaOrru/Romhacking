@@ -1,7 +1,9 @@
 #include <cstdio>
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include "block.hpp"
+#include "huffman.hpp"
 #include "rom.hpp"
 #include "sentence.hpp"
 
@@ -10,11 +12,34 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    if (argc < 4)
+    if (argc < 3)
         return 1;
 
     ROM::open(argv[2]);
+
+    if (string(argv[1]) == "-b")
+    {
+        if (argc < 5)
+            return 1;
+
+        int begin, end;
+        sscanf(argv[3], "%X", &begin);
+        sscanf(argv[4], "%X", &end);
+
+        Block block(begin, end);
+        for (auto v: Huffman::decompress(block))
+            cout << v;
+        cout << endl;
+    }
+
     vector<Block> blocks = Block::extract_blocks();
+
+    if (string(argv[1]) == "-l")
+    {
+        for (auto& b: blocks)
+            printf("%X\n", b.begin);
+    }
+
     vector<Sentence> sentences = Sentence::extract_sentences(blocks);
 
     if (string(argv[1]) == "-e")

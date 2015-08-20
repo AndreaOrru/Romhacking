@@ -41,7 +41,7 @@ vector<Sentence> Sentence::extract_sentences(vector<Block>& blocks)
 
     for (auto& block: blocks)
     {
-        int i = 0;
+        size_t i = 0;
         while (i < block.data.size())
         {
             u8 b = block.data[i];
@@ -86,7 +86,7 @@ bool Sentence::check(vector<u8>::iterator begin, vector<u8>::iterator end)
 int Sentence::try_sentence(vector<u8>& data, int begin)
 {
     int n = (data[begin] == 0x7B) ? 6 : 1;
-    int i = begin;
+    size_t i = begin;
 
     while (n > 0)
     {
@@ -109,13 +109,13 @@ int Sentence::try_sentence(vector<u8>& data, int begin)
 void Sentence::stringify()
 {
     vector<u8>& data = block->data;
-    int i = begin;
+    size_t i = begin;
 
          if (data[i] == 0x58) { text = "<BOX>" ; i++; }
     else if (data[i] == 0x5E) { text = "<LINE>"; i++; }
     else if (data[i] == 0x7B) { text = "<ALT>" ; i++; }
 
-    for (; i < end; i++)
+    for (; i < (size_t) end; i++)
     {
         if (i+2 < data.size() and data[i] == 0x19 and data[i+1] == 0xF8 and data[i+2] < 6)
         {

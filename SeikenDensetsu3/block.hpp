@@ -6,7 +6,8 @@
 
 struct Block
 {
-    Block(int begin, int bank_ptr, int offset_ptr) : begin(begin) { pointers.emplace_back(bank_ptr, offset_ptr); };
+    Block(int begin, int end) : begin(begin), end(end) {}
+    Block(int begin, int bank_ptr, int offset_ptr) : begin(begin) { pointers.emplace_back(bank_ptr, offset_ptr); }
     inline bool operator< (const Block& other) const { return begin < other.begin; }
 
   public:
