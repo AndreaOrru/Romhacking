@@ -1,9 +1,9 @@
 from os import environ
 
-env = Environment(ENV       = { 'TERM' : environ['TERM'] },
-                  CXX       = 'clang++',
-                  CXXFLAGS  = ['-std=c++11',
-                               '-O', '-flto',
-                               '-Wall', '-Werror', '-Wextra', '-pedantic'])
+env = Environment(ENV      = {'TERM' : environ['TERM']},
+                  CXX      = 'clang++',
+                  CXXFLAGS = ['-std=c++14',
+                              '-O', '-flto',
+                              '-Wall', '-Werror', '-Wextra', '-pedantic'])
 
-env.Program('seiken.out', Glob('*.cpp'))
+env.Program('seiken', Glob('*.cpp'))
