@@ -11,37 +11,33 @@ u8* rom;
 int size;
 
 
-void open(const char* fname)
+// Open the ROM.
+void open(const string file_name)
 {
-    FILE* file = fopen(fname, "rb");
+    FILE* file = fopen(file_name.c_str(), "rb");
 
+    // Get file size.
     fseek(file, 0, SEEK_END);
     size = ftell(file);
     rewind(file);
 
+    // Load all the data from the ROM.
     rom = new u8[size];
     fread(rom, 1, (size_t) size, file);
     fclose(file);
 }
 
-const u8* get_rom()
+// Read a byte from the given (PC) address.
+u8 readByte(int address)
 {
-    return rom;
+    return rom[address];
 }
 
-int get_size()
+// Read a word from the given (PC) address.
+u16 readWord(int address)
 {
-    return size;
-}
-
-u8 rd(int addr)
-{
-    return rom[addr];
-}
-
-u16 rd_w(int addr)
-{
-    return *((u16*) &rom[addr]);
+    return (rom[address + 1] << 8) |
+            rom[address];
 }
 
 }

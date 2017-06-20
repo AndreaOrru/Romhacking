@@ -1,95 +1,65 @@
-#include <algorithm>
-#include <iterator>
 #include <map>
-#include "block.hpp"
-#include "bytepair.hpp"
 #include "huffman.hpp"
 #include "rom.hpp"
+#include "block.hpp"
 
 using namespace std;
 
 
-void Block::insert_blocks(vector<Block>& blocks, const char* outname)
+// Extract all the blocks.
+vector<Block> Block::extractAll()
 {
-    vector<vector<u8>> datas = Huffman::compress(blocks);
-
-    FILE* out = fopen(outname, "wb");
-    fwrite(ROM::get_rom(), 1, (size_t) ROM::get_size(), out);
-
-    int diff = 0;
-    for (size_t i = 0; i < blocks.size(); i++)
-    {
-        auto& b = blocks[i];
-        size_t old_size = b.end - b.begin;
-
-        b.begin += diff;
-        b.end    = b.begin + datas[i].size();
-        diff += datas[i].size() - old_size;
-
-        for (auto& ptr: b.pointers)
-        {
-            if (ptr.first >= 0)
-            {
-                fseek(out, ptr.first, SEEK_SET);
-                fputc((ROM::rd(ptr.first) & 0xF0) | (((b.begin >> 16) - 0x38) & 0xF), out);
-            }
-            fseek(out, ptr.second, SEEK_SET);
-            fputc( b.begin &       0xFF, out);
-            fputc((b.begin >> 8) & 0xFF, out);
-        }
-
-        fseek(out, b.begin, SEEK_SET);
-        fwrite(datas[i].data(), 1, datas[i].size(), out);
-    }
-
-    auto& dict = BytePair::get_dict();
-    auto& tree = Huffman::get_encoded_tree();
-
-    fseek(out, 0x3E6604, SEEK_SET);
-    fwrite(dict.data(), 4, dict.size(), out);
-    fwrite(tree.data(), 2, tree.size(), out);
-
-    fclose(out);
-}
-
-vector<Block> Block::extract_blocks()
-{
+    // block address => block object.
     map<int, Block> blocks;
 
-    auto insert = [&](int bank_ptr, int offset_ptr) {
-        u8 bank = (u8) ((bank_ptr < 0) ? 0x3B : ((ROM::rd(bank_ptr) & 0xF) + 0x38));
-        u16 offset = ROM::rd_w(offset_ptr);
-        int begin = (bank << 16) | offset;
-
-        auto it = blocks.find(begin);
-        if (it != blocks.end())
-            it->second.pointers.emplace_back(bank_ptr, offset_ptr);
-        else
-            blocks.emplace(begin, Block(begin, bank_ptr, offset_ptr));
-    };
-
+    // Iterate through all the blocks.
     for (int i = 0; i < 0x1000; i++)
-        if (i != 0x827 and i != 0x855)
-            insert(0x3E4E00 + i / 2, 0x3E2E00 + i * 2);
-
-    for (int i = 0; i < 0x36; i++)
     {
-        int seq = 0x40000 + ROM::rd_w(0x4BF10 + i*2);
-        while (ROM::rd(seq) != 0)
-        {
-            insert(-1, seq + 3);
-            seq += 5;
-        }
+        int address = fetchBlockAddress(i);
+        // Check if we already encountered this block.
+        auto it = blocks.find(address);
+        if (it != blocks.end())
+            // We did, keep track of this block index as well.
+            it->second.indexes.push_back(i);
+        else
+            // We didn't, creat a new block.
+            blocks.emplace(address, Block(i, address));
     }
 
+    // Build a vector of the blocks, ordered by address.
     vector<Block> blocks_vec;
-    transform(blocks.begin(), blocks.end(), back_inserter(blocks_vec), [](pair<const int,Block> &x) { return x.second; });
+    transform(blocks.begin(), blocks.end(), back_inserter(blocks_vec),
+              [](pair<const int, Block> &x) { return x.second; });
 
+    // Decompress each block's data.
     for (auto it = blocks_vec.begin(); it != blocks_vec.end(); it++)
     {
-        it->end  = (next(it) != blocks_vec.end()) ? next(it)->begin : 0x3C0000;
-        it->data = Huffman::decompress(*it);
+        // A block begins where the next one ends, or at the end of all the blocks.
+        it->end = (next(it) == blocks_vec.end()) ? 0x3C0000 : next(it)->begin;
+        it->decompress();
     }
 
     return blocks_vec;
+}
+
+// Get the address of the block of index i.
+int Block::fetchBlockAddress(int i)
+{
+    // Fetch bank index.
+    u8 bank_index = ROM::readByte(0x3E4E00 + i/2);
+    if (i % 2) bank_index >>= 4;
+    bank_index &= 0x0F;
+
+    // Fetch the full address of the block.
+    u8  bank    = ROM::readByte(0xEA91 + bank_index) - 0xC0;
+    u16 offset  = ROM::readWord(0x3E2E00 + i*2);
+    int address = (bank << 16) | offset;
+
+    return address;
+}
+
+// Decompress the data of the block.
+void Block::decompress()
+{
+    this->data = Huffman::decompress(this->begin, this->end);
 }

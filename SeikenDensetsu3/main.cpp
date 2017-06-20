@@ -1,9 +1,7 @@
-#include <cstdio>
 #include <iostream>
-#include <fstream>
 #include <vector>
+#include "args/args.hxx"
 #include "block.hpp"
-#include "huffman.hpp"
 #include "rom.hpp"
 #include "sentence.hpp"
 
@@ -12,66 +10,67 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    if (argc < 3)
-        return 1;
+    // Define command line arguments.
+    args::ArgumentParser parser("Translation tool for Seiken Densetsu 3.");
+    args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
 
-    ROM::open(argv[2]);
+    args::Group commands(parser, "AVAILABLE COMMANDS:", args::Group::Validators::Xor);
+    args::Flag list(commands, "list", "List all the blocks", {'l', "list"});
+    args::ValueFlag<string> extract(commands, "DUMP", "Extract all the blocks", {'e', "extract"});
+    args::ValueFlag<string> insert(commands, "DUMP", "Reinsert all the blocks", {'i', "insert"});
 
-    if (string(argv[1]) == "-b")
+    args::Group rom_group(parser, "", args::Group::Validators::All);
+    args::Positional<string> rom(rom_group, "ROM", "Seiken Densetsu 3 ROM");
+
+
+    // Parse arguments.
+    try
     {
-        if (argc < 5)
-            return 1;
-
-        int begin, end;
-        sscanf(argv[3], "%X", &begin);
-        sscanf(argv[4], "%X", &end);
-
-        Block block(begin, end);
-        for (auto v: Huffman::decompress(block))
-            cout << v;
-        cout << endl;
+        parser.ParseCLI(argc, argv);
+    }
+    catch (args::Help)
+    {
+        std::cout << parser;
+    }
+    catch (args::ParseError e)
+    {
+        std::cerr << e.what() << std::endl;
+        std::cerr << parser;
+        return 1;
+    }
+    catch (args::ValidationError e)
+    {
+        std::cerr << e.what() << std::endl;
+        std::cerr << parser;
+        return 1;
     }
 
-    vector<Block> blocks = Block::extract_blocks();
 
-    if (string(argv[1]) == "-l")
+    // Execute the selected command.
+    vector<Block> blocks;
+    if (rom)
+    {
+        ROM::open(args::get(rom));
+        blocks = Block::extractAll();
+    }
+
+    if (list)
     {
         for (auto& b: blocks)
             printf("%X\n", b.begin);
     }
-
-    vector<Sentence> sentences = Sentence::extract_sentences(blocks);
-
-    if (string(argv[1]) == "-e")
+    else if (extract)
     {
-        FILE* dump = fopen(argv[3], "w");
+        auto sentences = Sentence::extractAll(blocks);
+        FILE* dump = fopen(args::get(extract).c_str(), "w");
 
         for (auto& sentence: sentences)
             fprintf(dump, "[String $%X, $%X-%X]\n%s\n", sentence.block->begin,
                     sentence.begin, sentence.end, sentence.text.c_str());
+
         fclose(dump);
     }
 
-    else if (string(argv[1]) == "-i")
-    {
-        if (argc < 5)
-            return 1;
-
-        string tmp;
-        ifstream dump(argv[3]);
-
-        int i = 0;
-        while (getline(dump, tmp, '\n'))
-        {
-            getline(dump, sentences[i].text, '[');
-            sentences[i].text.resize(sentences[i].text.size() - 1);
-            i++;
-        }
-        dump.close();
-
-        Sentence::insert_sentences(sentences);
-        Block::insert_blocks(blocks, argv[4]);
-    }
 
     return 0;
 }

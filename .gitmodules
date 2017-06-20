@@ -1,0 +1,3 @@
+[submodule "SeikenDensetsu3/args"]
+	path = SeikenDensetsu3/args
+	url = https://github.com/Taywee/args.git

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef TYPES_HPP
+#define TYPES_HPP
+
 #include <cstdint>
 
 typedef uint8_t  u8;
@@ -9,3 +11,5 @@ typedef int8_t   s8;
 typedef int16_t  s16;
 typedef int32_t  s32;
 typedef int64_t  s64;
+
+#endif
