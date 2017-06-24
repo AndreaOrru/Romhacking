@@ -22,7 +22,7 @@ vector<Block> Block::extractAll()
             // We did, keep track of this block index as well.
             it->second.indexes.push_back(i);
         else
-            // We didn't, creat a new block.
+            // We didn't, create a new block.
             blocks.emplace(address, Block(i, address));
     }
 
@@ -35,7 +35,10 @@ vector<Block> Block::extractAll()
     for (auto it = blocks_vec.begin(); it != blocks_vec.end(); it++)
     {
         // A block begins where the next one ends, or at the end of all the blocks.
-        it->end = (next(it) == blocks_vec.end()) ? 0x3C0000 : next(it)->begin;
+        it->end = (next(it) == blocks_vec.end()) ? 0x3BD079 : next(it)->begin;
+        // Block can't cross bank boundaries.
+        if ((it->begin >> 16) != (it->end >> 16))
+            it->end = (it->begin & 0xFF0000) + 0x10000;  // Keep it in the beginning bank.
         it->decompress();
     }
 

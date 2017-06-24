@@ -27,6 +27,14 @@ void open(const string file_name)
     fclose(file);
 }
 
+// Save the ROM.
+void save(const string file_name)
+{
+    FILE* file = fopen(file_name.c_str(), "wb");
+    fwrite(rom, sizeof(u8), size, file);
+    fclose(file);
+}
+
 // Read a byte from the given (PC) address.
 u8 readByte(int address)
 {
@@ -38,6 +46,19 @@ u16 readWord(int address)
 {
     return (rom[address + 1] << 8) |
             rom[address];
+}
+
+// Write a byte to the given (PC) address.
+void writeByte(int address, u8 byte)
+{
+     rom[address] = byte;
+}
+
+// Read a word from the given (PC) address.
+void writeWord(int address, u16 word)
+{
+    rom[address]     = word & 0xFF;
+    rom[address + 1] = word >> 8;
 }
 
 }

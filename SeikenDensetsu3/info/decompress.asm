@@ -1,7 +1,7 @@
-// TODO: comment this.
-bank    = $0002
-numBits = $0004
-bits    = $0006
+bank    = $0002  // The bank where the data is.
+numBits = $0004  // Available bits in the current 2 bytes of Huffman stream.
+bits    = $0006  // 2 bytes of Huffman stream.
+buffer  = $0008  // Decompression buffer.
 
 
 ////
@@ -51,17 +51,19 @@ decompressData:
     bra .begin          // $C0EBE6
 
 .foundBank:
-    // TODO: figure this out.
-    lda $0008,x         // $C0EBE8
+    // Check whether we have decompressed data in the buffer.
+    lda buffer,x        // $C0EBE8
     beq .startTreeWalk  // $C0EBEB
+    // Jump if we have not.
 
+    // We have decompressed data - fetch it.
     txa                 // $C0EBED
     clc                 // $C0EBEE
-    adc $0008,x         // $C0EBEF
-    adc $0008,x         // $C0EBF2
-    dec $0008,x         // $C0EBF5
+    adc buffer,x        // $C0EBEF
+    adc buffer,x        // $C0EBF2
+    dec buffer,x        // $C0EBF5
     tay                 // $C0EBF8
-    lda $0008,y         // $C0EBF9
+    lda buffer,y        // $C0EBF9
     bra .expandBytepair // $C0EBFC
 
 .startTreeWalk:
@@ -112,21 +114,21 @@ decompressData:
     plx                 // $C0EC2B
     phy                 // $C0EC2C
     pha                 // $C0EC2D
-    // TODO: figure out this $0008 non-sense.
-    inc $0008,x         // $C0EC2E
+    // Save decompressed data in the buffer.
+    inc buffer,x        // $C0EC2E
     txa                 // $C0EC31
     clc                 // $C0EC32
-    adc $0008,x         // $C0EC33
-    adc $0008,x         // $C0EC36
+    adc buffer,x        // $C0EC33
+    adc buffer,x        // $C0EC36
     tay                 // $C0EC39
     pla                 // $C0EC3A
-    sta $0008,y         // $C0EC3B
+    sta buffer,y        // $C0EC3B
     txy                 // $C0EC3E
     plx                 // $C0EC3F
     // Get last two bytes from $FE6604[x * 4].
     lda $FE6604,x       // $C0EC40
     tyx                 // $C0EC44
-    bra .loc_C0EC18     // $C0EC45
+    bra .expandBytepair // $C0EC45
 
 .returnFFFF:
     lda #$FFFF          // $C0EC47
@@ -258,3 +260,32 @@ fetchBlockAddress:
     plx                 // $C0EA8E
     plp                 // $C0EA8F
     rtl                 // $C0EA90
+
+
+////
+// Fetch menus block address.
+//
+// IN:    A = block index
+//
+// OUT:   A = bank
+//        X = lower 16-bits
+//
+fetchMenusAddress:
+    // TODO: comment this.
+
+    lda $C4B316         // $C49D1D
+    sta $1E             // $C49D21
+    ldx $4A             // $C49D23
+    lda $E8CA5C,x       // $C49D25
+    and #$00FF          // $C49D29
+    clc                 // $C49D2C
+    adc $20             // $C49D2D
+    asl                 // $C49D2F
+    clc                 // $C49D30
+    adc $1E             // $C49D31
+    tax                 // $C49D33
+    lda $C40000,x       // $C49D34
+    sta $4E             // $C49D38
+    lda #$00C4          // $C49D3A
+    sta $50             // $C49D3D
+    rts                 // $C49D3F

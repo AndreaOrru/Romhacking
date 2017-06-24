@@ -22,12 +22,11 @@ struct Block
     // Define a precedence operator between blocks (needed for std::map).
     inline bool operator< (const Block& other) const { return begin < other.begin; }
 
-    // Extract all blocks.
-    static std::vector<Block> extractAll();
+    static std::vector<Block> extractAll();  // Extract all blocks.
+    void decompress();  // Decompress the block's data.
 
   private:
     static int fetchBlockAddress(int i);
-    void decompress();
 };
 
 #endif
