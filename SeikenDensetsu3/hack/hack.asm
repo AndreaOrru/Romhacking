@@ -116,9 +116,9 @@ checkIfDecompressed:
     bcs .compressed
 
 .decompressed:
-	;; Save bank in $03.
+    ;; Save bank in $03.
     sta $03
-	;; Save rest of pointer in $01-02.
+    ;; Save rest of pointer in $01-02.
     lda $0000,x  ; Contains the pointer.
     sta $01
 
