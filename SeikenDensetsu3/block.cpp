@@ -45,6 +45,33 @@ vector<Block> Block::extractAll()
     return blocks_vec;
 }
 
+// Reinsert all the blocks.
+void Block::insertAll(vector<Block>& blocks)
+{
+    // Starting address.
+    int address = 0x410000;
+
+    for (Block& block: blocks)
+    {
+        // If the block crosses bank borders, just put it in the next bank.
+        if (( address                      >> 16) !=
+            ((address + block.data.size()) >> 16))
+        {
+            address = (address & 0xFF0000) + 0x10000;
+        }
+
+        // Write pointers to the block.
+        for (u16 i: block.indexes) {
+            ROM::writeWord(0x400000 + i*4,     address & 0xFFFF);
+            ROM::writeByte(0x400000 + i*4 + 2, address >> 16);
+        }
+
+        // Write the block's data.
+        for (u8 byte: block.data)
+            ROM::writeByte(address++, byte);
+    }
+}
+
 // Get the address of the block of index i.
 int Block::fetchBlockAddress(int i)
 {

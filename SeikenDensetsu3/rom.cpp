@@ -9,11 +9,13 @@ namespace ROM
 
 u8* rom;
 int size;
+string rom_path;
 
 
 // Open the ROM.
 void open(const string file_name)
 {
+    rom_path = file_name;
     FILE* file = fopen(file_name.c_str(), "rb");
 
     // Get file size.
@@ -28,9 +30,9 @@ void open(const string file_name)
 }
 
 // Save the ROM.
-void save(const string file_name)
+void save()
 {
-    FILE* file = fopen(file_name.c_str(), "wb");
+    FILE* file = fopen(rom_path.c_str(), "wb");
     fwrite(rom, sizeof(u8), size, file);
     fclose(file);
 }
@@ -51,7 +53,7 @@ u16 readWord(int address)
 // Write a byte to the given (PC) address.
 void writeByte(int address, u8 byte)
 {
-     rom[address] = byte;
+    rom[address] = byte;
 }
 
 // Read a word from the given (PC) address.

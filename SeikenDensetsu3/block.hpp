@@ -6,8 +6,11 @@
 
 
 // Event script block.
-struct Block
+class Block
 {
+    static int fetchBlockAddress(int i);
+
+  public:
     std::vector<u8>  data;     // Decompressed data.
     std::vector<u16> indexes;  // The indexes this block is referenced by.
     int begin;    // The beginning address of the block.
@@ -22,11 +25,10 @@ struct Block
     // Define a precedence operator between blocks (needed for std::map).
     inline bool operator< (const Block& other) const { return begin < other.begin; }
 
-    static std::vector<Block> extractAll();  // Extract all blocks.
+    static std::vector<Block> extractAll();             // Extract all blocks.
+    static void insertAll(std::vector<Block>& blocks);  // Reinsert all the blocks.
     void decompress();  // Decompress the block's data.
 
-  private:
-    static int fetchBlockAddress(int i);
 };
 
 #endif

@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <vector>
 #include "args/args.hxx"
@@ -17,8 +18,6 @@ int main(int argc, char* argv[])
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
 
     args::Group commands(parser, "AVAILABLE COMMANDS:", args::Group::Validators::Xor);
-    args::Flag list(commands, "list", "List all the blocks", {'l', "list"});
-    args::ValueFlag<string> block(commands, "ADDRESS", "Decompress a raw block", {'b', "block"});
     args::ValueFlag<string> extract(commands, "DUMP", "Extract all the blocks", {'e', "extract"});
     args::ValueFlag<string> insert(commands, "DUMP", "Reinsert all the blocks", {'i', "insert"});
 
@@ -55,41 +54,60 @@ int main(int argc, char* argv[])
     // Execute the selected command.
     //
     vector<Block> blocks;
+    map<pair<int,int>, Sentence*> sentences;
     if (rom)
     {
         ROM::open(args::get(rom));
         blocks = Block::extractAll();
+        sentences = Sentence::extractAll(blocks);
     }
 
-    if (list)
+    if (extract)
     {
-        for (Block& b: blocks)
-            printf("$%X (size: 0x%X)\n", b.begin, b.end - b.begin);
-    }
-    else if (block)
-    {
-        int address;
-        string address_str = args::get(block);
-        sscanf(address_str.c_str(), "%X", &address);
-
-        auto b = *find_if(blocks.begin(), blocks.end(), [=](const Block& b) { return b.begin == address; });
-        b.decompress();
-
-        for (u8 x: b.data)
-            cout << x;
-    }
-    else if (extract)
-    {
-        // TODO: move this somewhere else.
-
-        auto sentences = Sentence::extractAll(blocks);
+        // Open the dump file for writing.
         FILE* dump = fopen(args::get(extract).c_str(), "w");
 
-        for (Sentence& sentence: sentences)
-            fprintf(dump, "[Block $%X, String $%X-%X]\n%s\n", sentence.block->begin,
-                    sentence.begin, sentence.end, sentence.text.c_str());
+        // Iterate through the sentences and write them on the file.
+        for (auto& pair: sentences)
+        {
+            auto sentence = pair.second;
+            fprintf(dump, "[Block $%X, String $%X-%X]\n%s\n", sentence->block->begin,
+                    sentence->begin, sentence->end, sentence->text.c_str());
+        }
 
         fclose(dump);
+    }
+    else if (insert)
+    {
+        // Open the dump file for reading.
+        ifstream dump(args::get(insert).c_str());
+
+        // Find the first sentence.
+        string header;
+        getline(dump, header, '[');
+
+        // Iterate through the sentences.
+        while (getline(dump, header, '\n'))
+        {
+            // Parse the sentence header.
+            int block_address, sentence_begin, sentence_end;
+            sscanf(header.c_str(), "Block $%X, String $%X-%X]",
+                   &block_address, &sentence_begin, &sentence_end);
+
+            // Get the associated sentence object.
+            auto sentence = sentences[make_pair(block_address, sentence_begin)];
+            // Get the new text of the sentence and save it in the object.
+            getline(dump, sentence->text, '[');
+
+            // Remove trailing newline.
+            if (sentence->text.back() == '\n')
+                sentence->text.pop_back();
+        }
+
+        // Reinsert everything into the ROM.
+        Sentence::insertAll(sentences);
+        Block::insertAll(blocks);
+        ROM::save();
     }
 
 

@@ -15,9 +15,9 @@ const string Sentence::names[] = {
 
 
 // Extract all sentences from the given blocks.
-vector<Sentence> Sentence::extractAll(vector<Block>& blocks)
+map<pair<int,int>, Sentence*> Sentence::extractAll(vector<Block>& blocks)
 {
-    vector<Sentence> sentences;
+    map<pair<int,int>, Sentence*> sentences;
 
     // Iterate through the blocks.
     for (Block& block: blocks)
@@ -36,9 +36,9 @@ vector<Sentence> Sentence::extractAll(vector<Block>& blocks)
                 if (end)
                 {
                     // Create the new sentence and add it to the list.
-                    Sentence sentence(&block, i, end);
-                    sentence.stringify();
-                    sentences.push_back(sentence);
+                    auto sentence = new Sentence(&block, i, end);
+                    sentence->stringify();
+                    sentences[make_pair(block.begin, i)] = sentence;
 
                     // Restart searching from the end of the sentence.
                     i = end;
@@ -50,6 +50,44 @@ vector<Sentence> Sentence::extractAll(vector<Block>& blocks)
     }
 
     return sentences;
+}
+
+// Reinsert the sentences into the blocks.
+void Sentence::insertAll(map<pair<int,int>, Sentence*>& sentences)
+{
+    Block* block = nullptr;  // The block currently being considered.
+    int diff;  // Difference in position of the sentences compared to original.
+
+    // Iterate through the sentences in block and position order.
+    for (auto& pair: sentences)
+    {
+        auto sentence = pair.second;
+        // New block?
+        if (sentence->block != block)
+        {
+            block = sentence->block;
+            diff = 0;
+        }
+
+        // Update the sentence position inside the block.
+        sentence->begin += diff;
+        sentence->end   += diff;
+
+        // Erase the old sentence.
+        block->data.erase(block->data.begin() + sentence->begin,
+                          block->data.begin() + sentence->end);
+
+        // Serialize back the data into the ROM format.
+        auto data = sentence->unstringify();
+        // Calculate the difference in size and add it to the global count.
+        diff += data.size() - (sentence->end - sentence->begin);
+        // Update the new end of the sentence.
+        sentence->end = sentence->begin + data.size();
+
+        // Insert the new sentence into the block.
+        block->data.insert(block->data.begin() + sentence->begin,
+                           data.begin(), data.end());
+    }
 }
 
 // Search for a sentence in data starting at begin.
@@ -164,4 +202,86 @@ void Sentence::stringify()
             text.append(s);
         }
     }
+}
+
+// Convert the script format into encoded bytes.
+vector<u8> Sentence::unstringify()
+{
+    vector<u8> data;
+
+    // Iterate through the text.
+    for (size_t i = 0; i < text.size(); i++)
+    {
+        // Normal characters, not tags.
+        if (text[i] != '<')
+        {
+            // New line.
+            if (text[i] == '\n')
+                data.push_back(0x17);
+            // Ellipsis.
+            else if (!text.compare(i, 3, "..."))
+            {
+                data.push_back('_'); i += 2;
+            }
+            // Any other printable character.
+            else
+                data.push_back((u8) text[i]);
+        }
+        // Tags.
+        else
+        {
+            // Find the end of the tag.
+            i++;
+            unsigned sz = text.find('>', i) - i;
+            bool nl = false;  // Is there a newline right after the tag?
+
+                 if (!text.compare(i, sz, "BOX"))    data.push_back(0x58);
+            else if (!text.compare(i, sz, "LINE"))   data.push_back(0x5E);
+            else if (!text.compare(i, sz, "ALT"))    data.push_back(0x7B);
+            else if (!text.compare(i, sz, "OPEN"))   data.push_back(0x10);
+            else if (!text.compare(i, sz, "CLOSE"))  data.push_back(0x11);
+            else if (!text.compare(i, sz, "PAGE")) { data.push_back(0x12); nl = true; }
+            else if (!text.compare(i, sz, "OR"))     data.push_back(0x14);
+            else if (!text.compare(i, sz, "WAIT"))   data.push_back(0x18);
+
+            else if (!text.compare(i, sz, "END"))
+            {
+                data.push_back(0xFF); data.push_back(0xFF); nl = true;
+            }
+            else if (!text.compare(i, sz, "MULTI"))
+            {
+                data.push_back(0xF8); data.push_back(0x01);
+            }
+            else if (!text.compare(i, sz, "CHOICE"))
+            {
+                data.push_back(0xF3); data.push_back(0x00);
+            }
+            else
+            {
+                // It might be one of the main character names.
+                u8 n;
+                for (n = 0; n < 6; n++)
+                    if (!text.compare(i, sz, names[n]))
+                        break;
+                // It is.
+                if (n < 6)
+                {
+                    data.push_back(0x19); data.push_back(0xF8); data.push_back(n);
+                }
+                // It's not, it's just some weird byte.
+                else
+                {
+                    u8 v; sscanf(&text.c_str()[i], "%hhX", &v);
+                    data.push_back(v);
+                }
+            }
+
+            i += sz;
+            // Ignore the newline if it's part of the tag.
+            if (nl and text.at(i+1) == '\n')
+                i++;
+        }
+    }
+
+    return data;
 }

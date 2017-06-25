@@ -9,7 +9,7 @@ namespace ROM
 {
 
 void open(const std::string file_name);  // Open the ROM.
-void save(const std::string file_name);  // Save the ROM.
+void save();                             // Save the ROM.
 
 u8   readByte(int address);              // Read a byte from the given (PC) address.
 u16  readWord(int address);              // Read a word from the given (PC) address.
