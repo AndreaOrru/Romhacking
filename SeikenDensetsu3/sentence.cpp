@@ -28,8 +28,8 @@ map<pair<int,int>, Sentence*> Sentence::extractAll(vector<Block>& blocks)
         {
             // Check for dialogue event codes.
             u8 b = block.data[i];
-            if (b == 0x58 || b == 0x5E || b == 0x7B || b == 0xF2 ||
-                b == 0xF3 || b == 0xF8 || b == 0xFA)
+            if (b == 0x10 || b == 0x58 || b == 0x5E || b == 0x7B ||
+                b == 0xF2 || b == 0xF3 || b == 0xF8 || b == 0xFA)
             {
                 // Find where the sentence ends - or if it is a sentence at all.
                 int end = trySentence(block.data, i);
@@ -106,7 +106,7 @@ int Sentence::trySentence(vector<u8>& data, int begin)
             if (i+1 >= data.size())
                 return 0;
             // End of the sentence.
-            if (data[i] == 0xFF and data[i+1] == 0xFF)
+            if (data[i] == 0xFF && data[i+1] == 0xFF)
                 break;
             i++;
         }
@@ -130,7 +130,7 @@ bool Sentence::check(vector<u8>::iterator begin, vector<u8>::iterator end)
     // Count the number of printable characters in the string.
     int printable = 0;
     for (auto it = begin+1; it < end; it++)
-        if (*it == 0x17 or (*it >= 0x20 and *it <= 0x7E))
+        if (*it == 0x17 || (*it >= 0x20 && *it <= 0x7E))
             printable++;
     // With no printable characters it's certainly not a sentence.
     if (printable == 0)
@@ -140,9 +140,12 @@ bool Sentence::check(vector<u8>::iterator begin, vector<u8>::iterator end)
     auto in = [=](vector<u8> seq)
               { return search(begin+1, end, seq.begin(), seq.end()) != end; };
 
-    if (in({0x58, 0x10}) or in({0x5E, 0x10}))
+    if (in({0x58, 0x10}) || in({0x5E, 0x10}))
         return false;
-    if (*begin >= 0xF2 and (!in({0x14}) or in({0x12}) or in({0x11, 0xFF, 0xFF})))
+    if (*begin >= 0xF2 && (!in({0x14}) || in({0x12}) || in({0x11, 0xFF, 0xFF})))
+        return false;
+
+    if (*begin == 0x10 && *(begin+1) != 0x02 && *(begin+1) != 0xC6)
         return false;
 
     return true;
@@ -151,6 +154,7 @@ bool Sentence::check(vector<u8>::iterator begin, vector<u8>::iterator end)
 // Convert the raw bytes into a readable script format.
 void Sentence::stringify()
 {
+    char s[16];
     vector<u8>& data = block->data;
     size_t i = begin;
 
@@ -161,9 +165,26 @@ void Sentence::stringify()
     for (; i < (size_t) end; i++)
     {
         // Name of one of the main characters.
-        if (i+2 < data.size() and data[i] == 0x19 and data[i+1] == 0xF8 and data[i+2] < 6)
+        if (i+2 < data.size() && data[i] == 0x19 && data[i+1] == 0xF8 && data[i+2] < 6)
         {
             text += "<" + names[data[i+2]] + ">"; i += 2;
+        }
+        // Name of one of the current characters.
+        else if (i+1 < data.size() && data[i] == 0x19 && data[i+1] < 4)
+        {
+            sprintf(s, "<CHAR %d>", data[++i]);
+            text.append(s);
+        }
+
+        // Item names.
+        else if (i+2 < data.size() && data[i] == 0x1B && data[i+1] >= 0xF0)
+        {
+            u16 item = ((data[i+1] & 0x0F) << 8) |
+                         data[i+2];
+
+            sprintf(s, "<ITEM %.3X>", item);
+            text.append(s);
+            i += 2;
         }
 
         else if (data[i] == 0x10) text += "<OPEN>";
@@ -174,30 +195,33 @@ void Sentence::stringify()
         else if (data[i] == 0x18) text += "<WAIT>";
         else if (data[i] == '_' ) text += "...";
 
-        else if (i+1 < data.size() and data[i] == 0xFF and data[i+1] == 0xFF)
+        else if (i+1 < data.size() && data[i] == 0xFF && data[i+1] == 0xFF)
         {
             text += "<END>\n"; i++;
         }
-        else if (i+1 < data.size() and data[i] == 0xF8 and data[i+1] == 0x01)
+        else if (i+1 < data.size() && data[i] == 0xF8 && data[i+1] == 0x01)
         {
             text += "<MULTI>"; i++;
         }
-        else if (i+1 < data.size() and data[i] == 0xF3 and data[i+1] == 0x00)
+        else if (i+1 < data.size() && data[i] == 0xF3 && data[i+1] == 0x00)
         {
             text += "<CHOICE>"; i++;
         }
 
+        // Colors.
+        else if (data[i] == 0xC2) text += "<WHITE>";
+        else if (data[i] == 0xC6) text += "<YELLOW>";
+
         // Printable characters (exclude the ones we use for our tags).
-        else if (data[i] >= 0x20 and data[i] <= 0x7E and
-                 data[i] != '['  and data[i] != ']'  and
-                 data[i] != '<'  and data[i] != '>')
+        else if (data[i] >= 0x20 && data[i] <= 0x7E &&
+                 data[i] != '['  && data[i] != ']'  &&
+                 data[i] != '<'  && data[i] != '>')
         {
             text += data[i];
         }
         // Non-printable bytes.
         else
         {
-            char s[5];
             sprintf(s, "<%.2X>", data[i]);
             text.append(s);
         }
@@ -271,6 +295,25 @@ vector<u8> Sentence::unstringify()
             {
                 data.push_back(0xF3); data.push_back(0x00);
             }
+
+            else if (!text.compare(i, sz, "WHITE"))  data.push_back(0xC2);
+            else if (!text.compare(i, sz, "YELLOW")) data.push_back(0xC6);
+
+            else if (sz >= 4 && !text.compare(i, 4, "CHAR"))
+            {
+                u8 v; sscanf(&text.c_str()[i], "CHAR %hhd", &v);
+                data.push_back(0x19);
+                data.push_back(v);
+            }
+
+            else if (sz >= 4 && !text.compare(i, 4, "ITEM"))
+            {
+                u16 v; sscanf(&text.c_str()[i], "ITEM %hX", &v);
+                data.push_back(0x1B);
+                data.push_back((v >> 8) + 0xF0);
+                data.push_back(v & 0xFF);
+            }
+
             else
             {
                 // It might be one of the main character names.
@@ -293,7 +336,7 @@ vector<u8> Sentence::unstringify()
 
             i += sz;
             // Ignore the newline if it's part of the tag.
-            if (nl and text.at(i+1) == '\n')
+            if (nl && text.at(i+1) == '\n')
                 i++;
         }
     }
