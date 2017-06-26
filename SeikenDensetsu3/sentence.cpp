@@ -223,6 +223,21 @@ vector<u8> Sentence::unstringify()
             {
                 data.push_back('_'); i += 2;
             }
+            // Italian letters.
+            else if (text[i] == '\xC3')
+            {
+                i++;
+                switch (text[i])
+                {
+                    case '\xA0': data.push_back('\x8E'); break;  // à
+                    case '\xA8': data.push_back('\x8F'); break;  // è
+                    case '\xA9': data.push_back('\x90'); break;  // é
+                    case '\xAC': data.push_back('\x91'); break;  // ì
+                    case '\xB2': data.push_back('\x92'); break;  // ò
+                    case '\xB9': data.push_back('\x93'); break;  // ù
+                    case '\x88': data.push_back('\x94'); break;  // È
+                }
+            }
             // Any other printable character.
             else
                 data.push_back((u8) text[i]);

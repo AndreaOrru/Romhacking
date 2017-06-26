@@ -145,3 +145,10 @@ checkIfDecompressed:
     ;; Just go back to decompression routine.
     lda $0008,x    ; Instruction we substituted with jump.
     jml decompressData_continue
+
+
+;;;;
+;; Additional font letters for Italian.
+;;
+org $FE5EE0
+    incbin italianFont.bin
