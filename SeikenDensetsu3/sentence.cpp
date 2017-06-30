@@ -187,6 +187,12 @@ void Sentence::stringify()
             i += 2;
         }
 
+        else if (i+1 < data.size() && data[i] == 0x16)
+        {
+            sprintf(s, "<PAD %d>", data[++i]);
+            text.append(s);
+        }
+
         else if (data[i] == 0x10) text += "<OPEN>";
         else if (data[i] == 0x11) text += "<CLOSE>";
         else if (data[i] == 0x12) text += "<PAGE>\n";
@@ -209,8 +215,14 @@ void Sentence::stringify()
         }
 
         // Colors.
+        else if (data[i] == 0xC0) text += "<MONO WHITE>";
+        else if (data[i] == 0xC1) text += "<MONO NARROW WHITE>";
         else if (data[i] == 0xC2) text += "<WHITE>";
+        else if (data[i] == 0xC3) text += "<NARROW WHITE>";
+        else if (data[i] == 0xC4) text += "<MONO YELLOW>";
+        else if (data[i] == 0xC5) text += "<MONO NARROW YELLOW>";
         else if (data[i] == 0xC6) text += "<YELLOW>";
+        else if (data[i] == 0xC7) text += "<NARROW YELLOW>";
 
         // Printable characters (exclude the ones we use for our tags).
         else if (data[i] >= 0x20 && data[i] <= 0x7E &&
@@ -296,22 +308,35 @@ vector<u8> Sentence::unstringify()
                 data.push_back(0xF3); data.push_back(0x00);
             }
 
-            else if (!text.compare(i, sz, "WHITE"))  data.push_back(0xC2);
-            else if (!text.compare(i, sz, "YELLOW")) data.push_back(0xC6);
+            else if (!text.compare(i, sz, "MONO WHITE"))         data.push_back(0xC0);
+            else if (!text.compare(i, sz, "MONO NARROW WHITE"))  data.push_back(0xC1);
+            else if (!text.compare(i, sz, "WHITE"))              data.push_back(0xC2);
+            else if (!text.compare(i, sz, "NARROW WHITE"))       data.push_back(0xC3);
+            else if (!text.compare(i, sz, "MONO YELLOW"))        data.push_back(0xC4);
+            else if (!text.compare(i, sz, "MONO NARROW YELLOW")) data.push_back(0xC5);
+            else if (!text.compare(i, sz, "YELLOW"))             data.push_back(0xC6);
+            else if (!text.compare(i, sz, "NARROW YELLOW"))      data.push_back(0xC7);
 
-            else if (sz >= 4 && !text.compare(i, 4, "CHAR"))
+            else if (sz > 4 && !text.compare(i, 4, "CHAR"))
             {
                 u8 v; sscanf(&text.c_str()[i], "CHAR %hhd", &v);
                 data.push_back(0x19);
                 data.push_back(v);
             }
 
-            else if (sz >= 4 && !text.compare(i, 4, "ITEM"))
+            else if (sz > 4 && !text.compare(i, 4, "ITEM"))
             {
                 u16 v; sscanf(&text.c_str()[i], "ITEM %hX", &v);
                 data.push_back(0x1B);
                 data.push_back((v >> 8) + 0xF0);
                 data.push_back(v & 0xFF);
+            }
+
+            else if (sz > 3 && !text.compare(i, 3, "PAD"))
+            {
+                u8 v; sscanf(&text.c_str()[i], "PAD %hhd", &v);
+                data.push_back(0x16);
+                data.push_back(v);
             }
 
             else
