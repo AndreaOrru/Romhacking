@@ -1,2 +1,4 @@
+*.sfc
+*.smc
 /seiken
 /zig-cache
