@@ -27,5 +27,5 @@ pub fn main() !void {
     var rom = try ROM.fromFile(file, allocator);
     defer rom.deinit();
 
-    warn("{}\n", rom.getBlockAddress(0));
+    warn("{x}\n", rom.getBlockAddress(0));
 }

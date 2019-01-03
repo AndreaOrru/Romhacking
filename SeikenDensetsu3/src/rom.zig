@@ -1,6 +1,7 @@
 const std = @import("std");
 const mem = std.mem;
 const os = std.os;
+const shl = std.math.shl;
 
 pub const ROM = struct {
     allocator: *mem.Allocator,
@@ -28,8 +29,8 @@ pub const ROM = struct {
     }
 
     pub fn readWord(self: *ROM, address: u24) u16 {
-        return (self.data[address + 1] << 8) |
-                self.data[address];
+        return shl(u16, self.data[address + 1], usize(8)) |
+                        self.data[address];
     }
 
     pub fn getBlockAddress(self: *ROM, i: u24) u24 {
@@ -42,6 +43,6 @@ pub const ROM = struct {
         const bank   = self.readByte(0xEA91 + bank_index) - 0xC0;
         const offset = self.readWord(0x3E2E00 + i*2);
 
-        return (bank << 16) | offset;
+        return shl(u24, bank, usize(16)) | offset;
     }
 };
