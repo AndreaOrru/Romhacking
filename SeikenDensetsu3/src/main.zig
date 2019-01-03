@@ -26,4 +26,6 @@ pub fn main() !void {
     // Load ROM.
     var rom = try ROM.fromFile(file, allocator);
     defer rom.deinit();
+
+    warn("{}\n", rom.getBlockAddress(0));
 }

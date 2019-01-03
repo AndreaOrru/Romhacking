@@ -22,4 +22,26 @@ pub const ROM = struct {
     pub fn deinit(self: *ROM) void {
         self.allocator.free(self.data);
     }
+
+    pub fn readByte(self: *ROM, address: u24) u8 {
+        return self.data[address];
+    }
+
+    pub fn readWord(self: *ROM, address: u24) u16 {
+        return (self.data[address + 1] << 8) |
+                self.data[address];
+    }
+
+    pub fn getBlockAddress(self: *ROM, i: u24) u24 {
+        var bank_index: u24 = self.readByte(0x3E4E00 + i/2);
+        if (i % 2 != 0) {
+            bank_index >>= 4;
+        }
+        bank_index &= 0x0F;
+
+        const bank   = self.readByte(0xEA91 + bank_index) - 0xC0;
+        const offset = self.readWord(0x3E2E00 + i*2);
+
+        return (bank << 16) | offset;
+    }
 };
