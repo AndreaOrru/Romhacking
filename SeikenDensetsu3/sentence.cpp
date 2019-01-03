@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "sentence.hpp"
 
 using namespace std;

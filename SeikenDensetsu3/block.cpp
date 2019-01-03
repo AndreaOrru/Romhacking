@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <map>
 #include "huffman.hpp"
 #include "rom.hpp"
