@@ -35,8 +35,7 @@ u24 ROM::readAddress(u24 address) const {
 vector<Block> ROM::blocks() const {
   vector<Block> blocks;
   for (int i = 0; i < 188; i++) {
-    u24 address = readAddress(0xE40000 + (i * 3));
-    blocks.emplace_back(this, i, address);
+    blocks.emplace_back(this, i);
   }
   return blocks;
 }
