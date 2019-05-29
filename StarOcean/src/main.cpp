@@ -4,10 +4,11 @@
 #include <fmt/core.h>
 
 int main(int argc, char *argv[]) {
-  assert(argc >= 2);
+  // assert(argc >= 2);
 
-  char *rom_path = argv[1];
-  auto rom = ROM(rom_path);
+  // char *rom_path = argv[1];
+  // auto rom = ROM(rom_path);
+  auto rom = ROM("so.smc");
 
   // auto blocks = rom.blocks();
   // for (Block &block : blocks) {
