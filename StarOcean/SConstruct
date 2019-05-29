@@ -7,6 +7,7 @@ env = Environment(
     CXX='clang++',
     CXXFLAGS=['-g', '-std=c++17', '-Wall'],
     CPPPATH=['#include'],
+    LIBS=['fmt'],
 )
 
 env.Program('sotool', Glob('build/*.cpp'))
