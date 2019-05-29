@@ -11,7 +11,7 @@ public:
   u16 size;
 
   Block(const ROM *, u8);
-  void decompressString(u8);
+  std::vector<u8> decompressString(u8);
 
 private:
   const ROM *rom;
@@ -21,7 +21,7 @@ private:
   u8 readByte(u16) const;
   u16 readWord(u16) const;
   u24 readAddress(u16) const;
-  void pushByte(u8);
-  void pushWord(u16);
-  void pushAddress(u24);
+  static void pushByte(std::vector<u8> &, u8);
+  static void pushWord(std::vector<u8> &, u16);
+  static void pushAddress(std::vector<u8> &, u24);
 };

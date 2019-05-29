@@ -10,7 +10,9 @@ Block::Block(const ROM *rom, u8 index) : index(index), rom(rom) {
   initialize();
 }
 
-void Block::decompressString(u8 string_index) {
+vector<u8> Block::decompressString(u8 string_index) {
+  vector<u8> buffer;
+
   u16 decrypt_start = size + 6;
   u24 rom_data_start = readAddress(size + 2);
 
@@ -41,9 +43,10 @@ void Block::decompressString(u8 string_index) {
         bit_index += 1;
       }
     }
-
-    pushByte(decompressed_data & 0xFF);
+    pushByte(buffer, decompressed_data & 0xFF);
   }
+
+  return buffer;
 }
 
 void Block::initialize() {
@@ -52,12 +55,12 @@ void Block::initialize() {
   u24 start = address + 9;
   for (u24 i = 0; i < size; i++) {
     u8 byte = rom->readByte(start + i);
-    pushByte(byte);
+    pushByte(data, byte);
   }
 
-  pushWord(rom->readWord(address + 1));
-  pushAddress(start);
-  pushByte(0x00);
+  pushWord(data, rom->readWord(address + 1));
+  pushAddress(data, start);
+  pushByte(data, 0x00);
 }
 
 u8 Block::readByte(u16 index) const { return data[index]; }
@@ -74,14 +77,14 @@ u24 Block::readAddress(u16 index) const {
   return (hi << 16) | lo;
 }
 
-void Block::pushByte(u8 value) { data.push_back(value); }
+void Block::pushByte(vector<u8> &vec, u8 val) { vec.push_back(val); }
 
-void Block::pushWord(u16 value) {
-  pushByte(value & 0xFF);
-  pushByte(value >> 8);
+void Block::pushWord(vector<u8> &vec, u16 val) {
+  pushByte(vec, val & 0xFF);
+  pushByte(vec, val >> 8);
 }
 
-void Block::pushAddress(u24 value) {
-  pushByte(value & 0xFF);
-  pushWord(value >> 8);
+void Block::pushAddress(vector<u8> &vec, u24 val) {
+  pushByte(vec, val & 0xFF);
+  pushWord(vec, val >> 8);
 }

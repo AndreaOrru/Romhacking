@@ -16,7 +16,11 @@ int main(int argc, char *argv[]) {
   // }
 
   auto block = Block(&rom, 0x0b);
-  block.decompressString(0x24);
+  auto data = block.decompressString(0x24);
+  for (auto c : data) {
+    fmt::print("{:02X} ", c);
+  }
+  fmt::print("\n");
 
   return 0;
 }
