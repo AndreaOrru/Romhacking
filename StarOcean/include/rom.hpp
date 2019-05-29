@@ -2,6 +2,8 @@
 #include "types.hpp"
 #include <vector>
 
+class Block;
+
 class ROM {
 public:
   ROM(const char *);
@@ -11,7 +13,7 @@ public:
   u16 readWord(u24) const;
   u24 readAddress(u24) const;
 
-  std::vector<u24> blocks() const;
+  std::vector<Block> blocks() const;
 
 private:
   u8 *data;

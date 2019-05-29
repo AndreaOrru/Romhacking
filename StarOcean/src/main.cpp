@@ -1,3 +1,4 @@
+#include "block.hpp"
 #include "rom.hpp"
 #include <cassert>
 #include <fmt/core.h>
@@ -9,8 +10,9 @@ int main(int argc, char *argv[]) {
   auto rom = ROM(rom_path);
 
   auto blocks = rom.blocks();
-  for (auto block : blocks) {
-    fmt::print("{:06X}\n", block);
+  for (Block &block : blocks) {
+    fmt::print("block {:02X}, address {:06X}, size {:04X}\n", block.index,
+               block.address, block.size());
   }
 
   return 0;

@@ -1,4 +1,5 @@
 #include "rom.hpp"
+#include "block.hpp"
 #include <cstdio>
 
 using namespace std;
@@ -31,10 +32,11 @@ u24 ROM::readAddress(u24 address) const {
   return (hi << 16) | lo;
 }
 
-vector<u24> ROM::blocks() const {
-  vector<u24> blocks;
+vector<Block> ROM::blocks() const {
+  vector<Block> blocks;
   for (int i = 0; i < 188; i++) {
-    blocks.push_back(readAddress(0xE40000 + (i * 3)));
+    u24 address = readAddress(0xE40000 + (i * 3));
+    blocks.emplace_back(this, i, address);
   }
   return blocks;
 }
