@@ -1,6 +1,8 @@
 #include "rom.hpp"
 #include <cstdio>
 
+using namespace std;
+
 ROM::ROM(const char *path) {
   FILE *file = fopen(path, "rb");
 
@@ -27,6 +29,14 @@ u24 ROM::readAddress(u24 address) const {
   u16 lo = readWord(address);
   u8 hi = readByte(address + 2);
   return (hi << 16) | lo;
+}
+
+vector<u24> ROM::blocks() const {
+  vector<u24> blocks;
+  for (int i = 0; i < 188; i++) {
+    blocks.push_back(readAddress(0xE40000 + (i * 3)));
+  }
+  return blocks;
 }
 
 u24 ROM::translateAddress(u24 address) const { return address & ~0xC00000; }
