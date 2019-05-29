@@ -1,0 +1,12 @@
+from os import environ
+
+VariantDir('build', 'src', duplicate=0)
+
+env = Environment(
+    ENV=environ,
+    CXX='clang++',
+    CXXFLAGS=['-g', '-std=c++17', '-Wall'],
+    CPPPATH=['#include'],
+)
+
+env.Program('sotool', Glob('build/*.cpp'))
