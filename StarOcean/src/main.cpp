@@ -1,27 +1,27 @@
 #include "block.hpp"
 #include "rom.hpp"
 #include <cassert>
-#include <fmt/core.h>
+#include <iostream>
+
+using namespace std;
 
 int main(int argc, char *argv[]) {
-  // assert(argc >= 2);
+  assert(argc >= 2);
 
-  // char *rom_path = argv[1];
-  // auto rom = ROM(rom_path);
-  auto rom = ROM("so.smc");
+  char *rom_path = argv[1];
+  auto rom = ROM(rom_path);
 
-  // auto blocks = rom.blocks();
-  // for (Block &block : blocks) {
-  //   fmt::print("block {:02X}, address {:06X}, size {:04X}\n", block.index,
-  //              block.address, block.size);
-  // }
-
-  auto block = Block(&rom, 0x0b);
-  auto data = block.decompressString(0x24);
-  for (auto c : data) {
-    fmt::print("{:02X} ", c);
+  auto blocks = rom.blocks();
+  for (Block &block : blocks) {
+    if (block.type == 0x85) {
+      for (int i = 0; i < block.size / 2 - 1; i++) {
+        auto data = block.decompressString(i);
+        for (auto c : data) {
+          cout << c;
+        }
+      }
+    }
   }
-  fmt::print("\n");
 
   return 0;
 }

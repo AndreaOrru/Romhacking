@@ -9,6 +9,7 @@ public:
   u8 index;
   u24 address;
   u16 size;
+  u8 type;
 
   Block(const ROM *, u8);
   std::vector<u8> decompressString(u8);

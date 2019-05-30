@@ -7,11 +7,14 @@ using namespace std;
 Block::Block(const ROM *rom, u8 index) : index(index), rom(rom) {
   address = rom->readAddress(0xE40000 + (index * 3));
   size = rom->readWord(address + 9) / 8;
+  type = rom->readByte(address);
 
   initialize();
 }
 
 vector<u8> Block::decompressString(u8 string_index) {
+  assert(type == 0x85);
+
   bool done;
   u8 byte;
   u16 index, index2, type_index, word, fragment_start;
@@ -27,8 +30,8 @@ vector<u8> Block::decompressString(u8 string_index) {
 
   int i = 0;
   while (true) {
-    u8 type = rom->readByte(0xE8F9CE + input[i]);
-    switch (type) {
+    u8 byte_type = rom->readByte(0xE8F9CE + input[i]);
+    switch (byte_type) {
     case 1:
     case 2:
     case 3:
@@ -51,10 +54,10 @@ vector<u8> Block::decompressString(u8 string_index) {
       break;
 
     case 0x10 ... 0x4F:
-      byte = type - 0x10;
+      byte = byte_type - 0x10;
 
       index = input[i + 1];
-      index += (type & 0x0F) << 8;
+      index += (byte_type & 0x0F) << 8;
       index += 0x6E;
       index *= 2;
       index = rom->readWord(0xFF503E + index);
@@ -102,7 +105,7 @@ vector<u8> Block::decompressString(u8 string_index) {
       break;
 
     case 0x50 ... 0xFF:
-      type_index = (type - 0x50) * 2;
+      type_index = (byte_type - 0x50) * 2;
       index = rom->readWord(0xFF503E + type_index);
 
       while (true) {
