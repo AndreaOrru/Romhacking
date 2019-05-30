@@ -1,5 +1,6 @@
 #include "block.hpp"
 #include "rom.hpp"
+#include "sentence.hpp"
 #include <cassert>
 #include <iostream>
 
@@ -11,12 +12,10 @@ int main(int argc, char *argv[]) {
   char *rom_path = argv[1];
   auto rom = ROM(rom_path);
 
-  auto blocks = rom.blocks();
-  for (Block &block : blocks) {
-    if (block.type == 0x85) {
-      for (int i = 0; i < block.size / 2 - 1; i++) {
-        auto data = block.decompressString(i);
-        for (auto c : data) {
+  for (Block &block : rom.blocks()) {
+    if (block.type == TEXT) {
+      for (auto &sentence : block.extract()) {
+        for (auto c : sentence.data) {
           cout << c;
         }
       }
