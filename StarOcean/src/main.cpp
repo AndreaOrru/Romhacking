@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   char *rom_path = argv[1];
   auto rom = ROM(rom_path);
 
-  for (Block &block : rom.blocks()) {
+  for (auto &block : rom.blocks()) {
     if (block.type == TEXT) {
       for (auto &sentence : block.extract()) {
         cout << sentence.format() << endl << endl;

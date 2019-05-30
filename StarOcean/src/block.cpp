@@ -26,9 +26,8 @@ vector<u8> Block::decompressString(u8 string_index) const {
   u24 rom_data_start = readAddress(size + 2);
   u16 string_offset = readWord(string_index * 2);
   u16 next_string_offset = readWord((string_index + 1) * 2);
-  u16 string_limit = (next_string_offset / 8) + 1;
 
-  auto first_step = huffman(rom_data_start, string_offset, string_limit);
+  auto first_step = huffman(rom_data_start, string_offset, next_string_offset);
   auto second_step = decode(first_step);
 
   return second_step;
@@ -81,9 +80,10 @@ void Block::specialPush(vector<u8> &vec, u8 val) {
   }
 }
 
-vector<u8> Block::huffman(u24 data_start, u16 offset, u16 limit) const {
+vector<u8> Block::huffman(u24 data_start, u16 offset, u16 next_offset) const {
   vector<u8> buffer;
 
+  u16 limit = (next_offset / 8) + 1;
   u16 byte_index = offset / 8;
   u8 bit_index = offset % 8;
 
