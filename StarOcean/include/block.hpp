@@ -25,7 +25,7 @@ private:
   const ROM *rom;
   std::vector<u8> data;
 
-  std::vector<u8> decompressString(u8);
+  std::vector<u8> decompressString(u8) const;
   void initialize();
   u8 readByte(u16) const;
   u16 readWord(u16) const;
@@ -34,6 +34,6 @@ private:
   static void pushWord(std::vector<u8> &, u16);
   static void pushAddress(std::vector<u8> &, u24);
   static void specialPush(std::vector<u8> &, u8);
-  std::vector<u8> huffman(u24, u16, u16);
-  std::vector<u8> decode(const std::vector<u8> &);
+  std::vector<u8> huffman(u24, u16, u16) const;
+  std::vector<u8> decode(const std::vector<u8> &) const;
 };

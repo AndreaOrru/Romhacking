@@ -22,7 +22,7 @@ vector<Sentence> Block::extract() {
   return sentences;
 }
 
-vector<u8> Block::decompressString(u8 string_index) {
+vector<u8> Block::decompressString(u8 string_index) const {
   u24 rom_data_start = readAddress(size + 2);
   u16 string_offset = readWord(string_index * 2);
   u16 next_string_offset = readWord((string_index + 1) * 2);
@@ -81,7 +81,7 @@ void Block::specialPush(vector<u8> &vec, u8 val) {
   }
 }
 
-vector<u8> Block::huffman(u24 data_start, u16 offset, u16 limit) {
+vector<u8> Block::huffman(u24 data_start, u16 offset, u16 limit) const {
   vector<u8> buffer;
 
   u16 byte_index = offset / 8;
@@ -113,7 +113,7 @@ vector<u8> Block::huffman(u24 data_start, u16 offset, u16 limit) {
   return buffer;
 }
 
-vector<u8> Block::decode(const vector<u8> &input) {
+vector<u8> Block::decode(const vector<u8> &input) const {
   vector<u8> output;
 
   bool done;

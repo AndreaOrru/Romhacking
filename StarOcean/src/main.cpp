@@ -15,9 +15,7 @@ int main(int argc, char *argv[]) {
   for (Block &block : rom.blocks()) {
     if (block.type == TEXT) {
       for (auto &sentence : block.extract()) {
-        for (auto c : sentence.data) {
-          cout << c;
-        }
+        cout << sentence.format() << endl << endl;
       }
     }
   }
