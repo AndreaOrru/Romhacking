@@ -1,0 +1,32 @@
+#################
+#  Block Index  #
+#################
+
+# 3-byte addresses of (all?) the blocks.
+E40000 - E40E3E (?)
+
+
+
+#####################
+#  Block Structure  #
+#####################
+
+# Each capital letter is a nibble.
+# Ellipses signify repetition.
+
+{AA} {BBBB} {CCCC} {DDDD} {EEEE}  # Header (9 bytes).
+{YYYY...}                         # Indexes.
+{ZZ...}                           # Data.
+
+    AA = type of the block
+    Known types:
+        80 = ?
+        85 = dialogues
+        86 = event scripts (?)
+
+    BBBB = size of the block in bytes, counting from Y
+    CCCC = index of Z, counting from here
+    DDDD = ???
+    EEEE = always 0?
+    YYYY = indexes (in bits) of the strings in the block, counting from here
+    ZZ   = compressed strings
