@@ -83,11 +83,11 @@ void Block::specialPush(vector<u8> &vec, u8 val) {
 vector<u8> Block::huffman(u24 data_start, u16 offset, u16 next_offset) const {
   vector<u8> buffer;
 
-  u16 limit = (next_offset / 8) + 1;
+  u16 end_index = next_offset / 8;
   u16 byte_index = offset / 8;
   u8 bit_index = offset % 8;
 
-  while (byte_index < limit) {
+  while (byte_index <= end_index) {
     u16 decompressed_data = 0x00FE;
 
     while (!(decompressed_data & 0x8000)) {
