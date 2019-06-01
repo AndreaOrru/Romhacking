@@ -3,7 +3,7 @@
 #################
 
 # 3-byte addresses of (all?) the blocks.
-E40000 - E40E3E (?)
+E40000 - E40234 (?)
 
 
 
