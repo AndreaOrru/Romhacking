@@ -22,10 +22,10 @@ pip install -r requirements.txt
 ## Usage
 ```bash
 # Extract.
-./bin/evertool extract evermore.sfc dump.txt
+./bin/evertool extract ORIGINAL_ROM TEXT_FILE
 
-# Reinsert (creates patched_evermore.sfc).
-./bin/evertool reinsert evermore.sfc dump.txt
+# Reinsert (creates a patched ROM file).
+./bin/evertool reinsert ORIGINAL_ROM TEXT_FILE
 ```
 
 ## Testing
