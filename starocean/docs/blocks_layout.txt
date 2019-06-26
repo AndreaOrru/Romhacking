@@ -1,0 +1,10 @@
+# Data (307240 bytes).
+E40E34 - E8BE5C
+
+# Probably reserved zones.
+E4FF82 - E4FFE2
+E4FFF8 - E50000  # Maybe just avoiding bank switching?
+E5FFEB - E60000  # Maybe just avoiding bank switching?
+E6C25B - E6CF13
+E6FFBD - E70000  # Maybe just avoiding bank switching?
+E7FFE2 - E80000  # Maybe just avoiding bank switching?
