@@ -9,13 +9,13 @@ org $C40002
 
 ;; Make font start from 0x10 instead of 0x20.
 org $CC9ED7
-	sbc #$10
+  sbc #$10
 org $CCA54E
-	sbc #$10
+  sbc #$10
 org $CCA5A3
-	sbc #$10
+  sbc #$10
 org $CCA929
-	sbc #$10
+  sbc #$10
 org $CCB9B7
   sbc #$10
 org $CCB9FC
