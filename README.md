@@ -28,7 +28,7 @@ pip install -r requirements.txt
 ./bin/evertool reinsert evermore.sfc dump.txt
 ```
 
-## Tests
+## Testing
 ```bash
 # Install dev dependencies.
 pip install -r requirements-dev.txt
