@@ -1,6 +1,12 @@
 #!/bin/sh
 
-clang++                           \
+if [ -x "$(command -v clang++)" ]; then
+    CXX=clang++
+else
+    CXX=g++
+fi
+
+$CXX                              \
     -std=c++17 -Wall              \
     -Ofast -march=native -fPIC    \
     -lboost_python37 -lpython3.7m \
