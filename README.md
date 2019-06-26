@@ -3,14 +3,16 @@ Tools, hacks, technical info about good old games.
 
 ## Installation
 ### Asar (65c816 assembler)
+On Debian-based distributions, make sure you have `build-essential` and `cmake` installed.
 ```bash
 git clone https://github.com/RPGHacker/asar
 cd asar
 cmake src && make
-cp asar/asar-standalone /usr/local/bin/asar
+sudo cp asar/asar-standalone /usr/local/bin/asar
 ```
 
 ### Python dependencies
+Python >= 3.7 is recommended.
 ```bash
 # Install dependencies inside a virtualenv.
 # i.e.: mkvirtualenv romhacking
