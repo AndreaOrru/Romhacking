@@ -14,10 +14,6 @@ from romhacking.rom import ROM as GenericROM
 SHA1_ORIGINAL = '79e7738630fff5699217ef58ecc421bc8fcbcd89'
 N_SENTENCES = 3002
 
-N_FONT_CHARS = 128
-FONT_HEIGHT = 12
-FONT_TILES = 2
-
 
 def asm_path(file_name: str) -> str:
     return join(dirname(__file__), 'asm', file_name)
