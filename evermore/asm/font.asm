@@ -2,6 +2,11 @@ arch 65816
 hirom
 
 
+;; Substitute font.
+org $C40002
+  incbin font.bin
+
+
 ;; Make font start from 0x10 instead of 0x20.
 org $CC9ED7
 	sbc #$10

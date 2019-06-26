@@ -5,9 +5,8 @@ from typing import List, Tuple
 from cached_property import cached_property
 
 from evermore.formatting import unformat
-from evermore.layout import (DIALOGUE_FONT, DIALOGUE_FONT_WIDTHS, DTES, MTES,
-                             MTES_END, POINTERS, POINTERS_END, RELOCATED_TEXT,
-                             SCATTER_TABLE)
+from evermore.layout import (DTES, MTES, MTES_END, POINTERS, POINTERS_END,
+                             RELOCATED_TEXT, SCATTER_TABLE)
 from evermore.sentence import Sentence
 from romhacking.malloc import Heap
 from romhacking.rom import ROM as GenericROM
@@ -97,9 +96,6 @@ class ROM(GenericROM):
             self.write(pointer, sentence)
             self.writeAddress(POINTERS + i * 3, pointer)
 
-        # Make space for 0x10 more characters (0x10-0x1F).
-        self._expandFont()
-
         self.save()
         self.assemble(asm_path('text.asm'))
         self.assemble(asm_path('font.asm'))
@@ -114,22 +110,3 @@ class ROM(GenericROM):
             sentence = unformat(match)
             sentences.append(sentence)
         return sentences
-
-    def _expandFont(self) -> None:
-        # TODO: insert actual font.
-
-        # Read original font.
-        font = self.read(
-            DIALOGUE_FONT,
-            N_FONT_CHARS * FONT_HEIGHT * FONT_TILES,
-        )
-        widths = self.read(DIALOGUE_FONT_WIDTHS, N_FONT_CHARS)
-
-        # Move the font 0x10 chars forward (discard last row of chars).
-        font_padding = [0xFF] * FONT_HEIGHT * FONT_TILES * 0x10
-        font = font_padding + font[:-len(font_padding)]
-        # Adjust the width table accordingly.
-        widths = ([8] * 0x10) + widths[:-0x10]
-
-        self.write(DIALOGUE_FONT, font)
-        self.write(DIALOGUE_FONT_WIDTHS, widths)
