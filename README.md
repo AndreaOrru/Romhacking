@@ -19,7 +19,7 @@ Python >= 3.7 is recommended.
 pip install -r requirements.txt
 ```
 
-### C++ libraries (Star Ocean only).
+### C++ libraries (for Star Ocean only)
 Make sure you have Boost.Python installed (`libboost-python-dev` on Debian-based distributions).
 ```bash
 cd romhacking
