@@ -24,8 +24,8 @@ org $CCBB20
   sbc #$10
 org $CCC950
   sbc #$10
-org $CCC9A4
-  sbc #$10
+;;org $CCC9A4
+;;  sbc #$10
 
 
 ;; Choice arrow character has a different index now.
