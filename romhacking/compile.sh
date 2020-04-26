@@ -6,11 +6,11 @@ else
     CXX=g++
 fi
 
-$CXX                              \
-    -std=c++17 -Wall              \
-    -Ofast -march=native -fPIC    \
-    -lboost_python37 -lpython3.7m \
-    -I/usr/include/python3.7m     \
-    -shared                       \
-    -o bytepair.so                \
+$CXX                             \
+    -std=c++17 -Wall             \
+    -Ofast -march=native -fPIC   \
+    -lboost_python38 -lpython3.8 \
+    -I/usr/include/python3.8     \
+    -shared                      \
+    -o bytepair.so               \
     bytepair.cpp
