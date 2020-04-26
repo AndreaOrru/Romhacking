@@ -21,7 +21,6 @@ pip install -r requirements.txt
 
 ### C++ libraries (for Star Ocean only)
 Make sure you have Boost.Python installed (`libboost-python-dev` on Debian-based distributions).
-You may need to adjust the `compile.sh` script based on your system and version of Python.
 ```bash
 cd romhacking
 ./compile.sh
