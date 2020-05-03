@@ -150,5 +150,5 @@ checkIfDecompressed:
 ;;;;
 ;; Additional font letters for Italian.
 ;;
-org $FE5EE0
-    incbin italianFont.bin
+;;org $FE5EE0
+;;    incbin italianFont.bin
