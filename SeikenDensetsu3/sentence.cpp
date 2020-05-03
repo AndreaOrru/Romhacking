@@ -266,13 +266,13 @@ vector<u8> Sentence::unstringify()
                 i++;
                 switch (text[i])
                 {
-                    case '\xA0': data.push_back('\x8E'); break;  // à
-                    case '\xA8': data.push_back('\x8F'); break;  // è
-                    case '\xA9': data.push_back('\x90'); break;  // é
-                    case '\xAC': data.push_back('\x91'); break;  // ì
-                    case '\xB2': data.push_back('\x92'); break;  // ò
-                    case '\xB9': data.push_back('\x93'); break;  // ù
-                    case '\x88': data.push_back('\x94'); break;  // È
+                    case '\xA0': data.push_back('\x80'); break;  // à
+                    case '\xA8': data.push_back('\x81'); break;  // è
+                    case '\xA9': data.push_back('\x82'); break;  // é
+                    case '\xAC': data.push_back('\x83'); break;  // ì
+                    case '\xB2': data.push_back('\x84'); break;  // ò
+                    case '\xB9': data.push_back('\x85'); break;  // ù
+                    case '\x88': data.push_back('\x89'); break;  // È
                 }
             }
             // Any other printable character.
