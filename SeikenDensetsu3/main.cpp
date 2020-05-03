@@ -1,3 +1,4 @@
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -20,6 +21,8 @@ int main(int argc, char* argv[])
     args::Group commands(parser, "AVAILABLE COMMANDS:", args::Group::Validators::Xor);
     args::ValueFlag<string> extract(commands, "DUMP", "Extract all the blocks", {'e', "extract"});
     args::ValueFlag<string> insert(commands, "DUMP", "Reinsert all the blocks", {'i', "insert"});
+
+    args::ValueFlag<string> english_rom(parser, "ENGLISH_ROM", "Original English ROM", {'o', "original-rom"});
 
     args::Group rom_group(parser, "", args::Group::Validators::All);
     args::Positional<string> rom(rom_group, "ROM", "Seiken Densetsu 3 ROM");
@@ -55,9 +58,25 @@ int main(int argc, char* argv[])
     //
     vector<Block> blocks;
     map<pair<int,int>, Sentence*> sentences;
-    if (rom)
+
+    // If inserting, load blocks and sentences from
+    // the original English ROM.
+    if (insert)
     {
-        ROM::open(args::get(rom));
+        assert(english_rom);
+        ROM::open(args::get(english_rom));
+        blocks = Block::extractAll();
+        sentences = Sentence::extractAll(blocks);
+    }
+
+    // Open the target ROM.
+    assert(rom);
+    ROM::open(args::get(rom));
+    // If we're inserting, the blocks are coming from
+    // the original English ROM, not from the one we
+    // are trying to insert into, so we don't need to
+    // load blocks and sentences from it.
+    if (!insert) {
         blocks = Block::extractAll();
         sentences = Sentence::extractAll(blocks);
     }
