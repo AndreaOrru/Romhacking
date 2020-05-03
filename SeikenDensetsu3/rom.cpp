@@ -7,8 +7,8 @@ using namespace std;
 namespace ROM
 {
 
-u8* rom;
-int size;
+u8* rom = nullptr;
+size_t rom_size;
 string rom_path;
 
 
@@ -20,20 +20,26 @@ void open(const string file_name)
 
     // Get file size.
     fseek(file, 0, SEEK_END);
-    size = ftell(file);
+    rom_size = ftell(file);
     rewind(file);
 
     // Load all the data from the ROM.
-    rom = new u8[size];
-    fread(rom, 1, (size_t) size, file);
+    if (rom != nullptr) delete rom;
+    rom = new u8[rom_size];
+    fread(rom, 1, (size_t) rom_size, file);
     fclose(file);
+}
+
+size_t size()
+{
+    return rom_size;
 }
 
 // Save the ROM.
 void save()
 {
     FILE* file = fopen(rom_path.c_str(), "wb");
-    fwrite(rom, sizeof(u8), size, file);
+    fwrite(rom, sizeof(u8), rom_size, file);
     fclose(file);
 }
 

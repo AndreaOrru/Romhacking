@@ -72,11 +72,18 @@ int main(int argc, char* argv[])
     // Open the target ROM.
     assert(rom);
     ROM::open(args::get(rom));
-    // If we're inserting, the blocks are coming from
-    // the original English ROM, not from the one we
-    // are trying to insert into, so we don't need to
-    // load blocks and sentences from it.
-    if (!insert) {
+    // Sanity check: are we inserting into an expanded ROM?
+    if (insert && ROM::size() < 0x600000)
+    {
+        std::cerr << "ERROR: Trying to reinsert inside non-expanded ROM." << std::endl;
+        return 1;
+    }
+    else if (!insert)
+    {
+        // If we're inserting, the blocks are coming from
+        // the original English ROM, not from the one we
+        // are trying to insert into, so we don't need to
+        // load blocks and sentences from it.
         blocks = Block::extractAll();
         sentences = Sentence::extractAll(blocks);
     }
