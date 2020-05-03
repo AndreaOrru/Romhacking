@@ -17,7 +17,7 @@ vector<u8> decompress(int begin, int end)
     u8 bits = 0;  // 8 bits of Huffman stream.
     int b = 0;    // Number of bits still available.
 
-    while (i < end)
+    do
     {
         // Start from the root of the tree.
         u16 node = ROM::readWord(0x3E6600);
@@ -28,6 +28,7 @@ vector<u8> decompress(int begin, int end)
             // If we don't have any more bits, load a new byte.
             if (b == 0)
             {
+                if (i >= end) return data;
                 bits = ROM::readByte(i++);
                 b = 8;
             }
@@ -49,6 +50,7 @@ vector<u8> decompress(int begin, int end)
         auto s = BytePair::expand(nodeValue);
         data.insert(data.end(), s.begin(), s.end());
     }
+    while (i < end || b > 0);
 
     return data;
 }
