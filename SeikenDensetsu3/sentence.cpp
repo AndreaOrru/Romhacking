@@ -274,7 +274,7 @@ vector<u8> Sentence::unstringify()
                     case '\xB9': data.push_back('\x85'); break;  // ù
                     case '\x80': data.push_back('\x88'); break;  // À
                     case '\x88': data.push_back('\x89'); break;  // È
-                    case '\x88': data.push_back('\x8A'); break;  // É
+                    case '\x89': data.push_back('\x8A'); break;  // É
                     case '\x8C': data.push_back('\x8B'); break;  // Ì
                     case '\x92': data.push_back('\x8C'); break;  // Ò
                     case '\x99': data.push_back('\x8D'); break;  // Ù
