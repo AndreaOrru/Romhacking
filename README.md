@@ -1,5 +1,5 @@
 # Romhacking
-Tools, hacks, technical info about good old games.
+Tools, hacks and technical info about the good old games.
 
 ## Installation
 ### Asar (65c816 assembler)
