@@ -1,11 +1,16 @@
-autoflake
-epc
-flake8
-flake8-mypy
-importmagic
-ipython
-isort
-pdbpp
-pytest
+# Virtual environments.
 virtualenvwrapper
-yapf
+future
+
+# Formatters and linters.
+black
+flake8
+isort
+mypy
+
+# Development tools.
+ipython
+pdbpp
+pre-commit
+pytest
+pytest-cov
