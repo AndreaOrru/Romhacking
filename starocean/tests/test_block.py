@@ -17,8 +17,11 @@ class BlockTestCase(TestCase):
         self.assertEqual(self.block.size, 0x822)
         self.assertEqual(
             self.block.size,
-            (len(self.block.header) + len(self.block.indexes) * 2 +
-             len(self.block.content)),
+            (
+                len(self.block.header)
+                + len(self.block.indexes) * 2
+                + len(self.block.content)
+            ),
         )
 
     def test_end(self):
@@ -28,8 +31,7 @@ class BlockTestCase(TestCase):
         self.assertEqual(len(self.block.data), self.block.size)
 
     def test_decompressRange(self):
-        data = self.block._decompressRange(self.block.indexes[0],
-                                           self.block.indexes[1])
+        data = self.block._decompressRange(self.block.indexes[0], self.block.indexes[1])
         self.assertEqual(data[0], 0x89)
         self.assertEqual(data[-1], 0x89)
         self.assertEqual(len(data), 0xD)

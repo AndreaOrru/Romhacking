@@ -9,7 +9,7 @@ class ROMTestCase(TestCase):
         self.assertEqual(self.rom.type, ROMType.HiROM)
 
     def test_title(self):
-        self.assertTrue(self.rom.title.startswith('SECRET OF EVERMORE'))
+        self.assertTrue(self.rom.title.startswith("SECRET OF EVERMORE"))
 
     def test_address_translation(self):
         self.assertEqual(self.rom.readAddress(0xD1D0C0), 0x800378)
@@ -23,12 +23,12 @@ class ROMTestCase(TestCase):
 
     def test_dtes(self):
         self.assertEqual(len(self.rom.dtes), 64)
-        self.assertEqual(self.rom.dtes[0], 'e ')
-        self.assertEqual(self.rom.dtes[-1], 'me')
+        self.assertEqual(self.rom.dtes[0], "e ")
+        self.assertEqual(self.rom.dtes[-1], "me")
 
     def test_mtes(self):
         self.assertEqual(len(self.rom.mtes), 319)
-        self.assertEqual(self.rom.mtes[0], 'alchemy')
+        self.assertEqual(self.rom.mtes[0], "alchemy")
         self.assertEqual(self.rom.mtes[-1], "You've")
 
     def test_sentences(self):

@@ -20,7 +20,7 @@ class Sentence:
         return format(self.data)
 
     def _decodeAscii(self) -> str:
-        output = ''
+        output = ""
         i = self.start
 
         while True:
@@ -34,7 +34,7 @@ class Sentence:
         return output
 
     def _decode(self) -> str:
-        output = ''
+        output = ""
         i = self.start
 
         while True:
@@ -61,7 +61,7 @@ class Sentence:
             elif c > 0xC0:
                 output += self._expandMTE_8(c)
 
-            if output[-1] == '\x00':
+            if output[-1] == "\x00":
                 break
 
         return output

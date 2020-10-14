@@ -4,25 +4,27 @@ from bidict import bidict
 
 from romhacking.formatting import ascii_dictionary
 
-dictionary = bidict({
-    **ascii_dictionary,
-    **{
-        chr(0x11): 'à',
-        chr(0x13): 'è',
-        chr(0x15): 'é',
-        chr(0x17): 'ì',
-        chr(0x19): 'ò',
-        chr(0x1B): 'ù',
-        chr(0x1D): 'È',
-        '_': '…',
-        '<': '«',
-        '>': '»',
+dictionary = bidict(
+    {
+        **ascii_dictionary,
+        **{
+            chr(0x11): "à",
+            chr(0x13): "è",
+            chr(0x15): "é",
+            chr(0x17): "ì",
+            chr(0x19): "ò",
+            chr(0x1B): "ù",
+            chr(0x1D): "È",
+            "_": "…",
+            "<": "«",
+            ">": "»",
+        },
     }
-})
+)
 
 
 def format(text: str) -> str:
-    output = ''
+    output = ""
     i = 0
 
     while i < len(text):
@@ -32,34 +34,34 @@ def format(text: str) -> str:
             output += dictionary[c]
         except KeyError:
             if ord(c) == 0x00:
-                output += '<End>'
+                output += "<End>"
             elif ord(c) == 0x80:
-                output += '<S'
+                output += "<S"
                 j = 0
                 while True:
                     j += 1
                     c = text[i + j]
-                    output += ' ${:02X}'.format(ord(c))
+                    output += " ${:02X}".format(ord(c))
                     if j > 1 and ord(c) in (0x80, 0x81, 0x82):
                         break
                 i += j
-                output += '>'
+                output += ">"
             elif ord(c) == 0x81:
-                output += '<Boy>'
+                output += "<Boy>"
             elif ord(c) == 0x82:
-                output += '<Dog>'
+                output += "<Dog>"
             elif ord(c) == 0x83:
-                output += '<Player3>'
+                output += "<Player3>"
             elif ord(c) == 0x84:
-                output += '<Player4>'
+                output += "<Player4>"
             elif ord(c) == 0x8B:
-                output += '<Choice>'
+                output += "<Choice>"
             elif ord(c) == 0xA1:
-                output += '<Count>'
+                output += "<Count>"
             elif ord(c) == 0xA2:
-                output += '<Item>'
+                output += "<Item>"
             else:
-                output += '<${:02X}>'.format(ord(c))
+                output += "<${:02X}>".format(ord(c))
 
         i += 1
 
@@ -71,33 +73,33 @@ def unformat(text: str) -> List[int]:
     i = 0
     while i < len(text):
         c = text[i]
-        if c != '<':
+        if c != "<":
             output.append(ord(dictionary.inverse[c]))
             i += 1
             continue
 
-        j = text.find('>', i + 1)
-        tag = text[i + 1:j]
+        j = text.find(">", i + 1)
+        tag = text[i + 1 : j]
 
-        if tag.startswith('S '):
+        if tag.startswith("S "):
             output.append(0x80)
             for byte in tag[2:].split():
                 output.append(int(byte[1:], 16))
-        elif tag == 'End':
+        elif tag == "End":
             output.append(0x00)
-        elif tag == 'Boy':
+        elif tag == "Boy":
             output.append(0x81)
-        elif tag == 'Dog':
+        elif tag == "Dog":
             output.append(0x82)
-        elif tag == 'Player3':
+        elif tag == "Player3":
             output.append(0x83)
-        elif tag == 'Player4':
+        elif tag == "Player4":
             output.append(0x84)
-        elif tag == 'Choice':
+        elif tag == "Choice":
             output.append(0x8B)
-        elif tag == 'Count':
+        elif tag == "Count":
             output.append(0xA1)
-        elif tag == 'Item':
+        elif tag == "Item":
             output.append(0xA2)
         else:
             output.append(int(tag[1:], 16))

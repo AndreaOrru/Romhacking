@@ -16,7 +16,7 @@ class Font:
 
         characters = []
         for i in range(0, len(self.data), self.CHAR_SIZE):
-            char_data = self.data[i:i + self.CHAR_SIZE]
+            char_data = self.data[i : i + self.CHAR_SIZE]
             characters.append(self._convertTo16x16(char_data))
         return characters
 
@@ -26,8 +26,8 @@ class Font:
         for char in self.characters:
             max_width = 0
             for line in char:
-                string = '{:016b}'.format(line)
-                width = string.rfind('1')
+                string = "{:016b}".format(line)
+                width = string.rfind("1")
                 if width > max_width:
                     max_width = width
             widths.append(max_width + 1 if max_width else 3)
@@ -37,9 +37,9 @@ class Font:
     def displayChar(char: List[int]) -> str:
         strings = []
         for b in char:
-            string = '{:016b}'.format(b).replace('0', ' ').replace('1', '#')
+            string = "{:016b}".format(b).replace("0", " ").replace("1", "#")
             strings.append(string)
-        return '\n'.join(strings)
+        return "\n".join(strings)
 
     def generateVWF(self, string: List[int]) -> List[List[int]]:
         shift = 0

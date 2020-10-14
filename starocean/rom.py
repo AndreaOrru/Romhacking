@@ -10,16 +10,15 @@ from romhacking.malloc import Heap
 from romhacking.rom import ROM as GenericROM
 from romhacking.rom import ROMType
 from starocean.block import Block, BlockType
-from starocean.layout import (DIALOGUE_FONT, UNUSED_AREA1, UNUSED_AREA2,
-                              UNUSED_AREA3)
+from starocean.layout import DIALOGUE_FONT, UNUSED_AREA1, UNUSED_AREA2, UNUSED_AREA3
 
 N_BLOCKS = 188
 N_CHARS = 0x60
-SHA1_ORIGINAL = '8574f0c49b0e823f21763331c2d66225b95c1653'
+SHA1_ORIGINAL = "8574f0c49b0e823f21763331c2d66225b95c1653"
 
 
 def asm_path(file_name: str) -> str:
-    return join(dirname(__file__), 'asm', file_name)
+    return join(dirname(__file__), "asm", file_name)
 
 
 class ROM(GenericROM):
@@ -43,11 +42,11 @@ class ROM(GenericROM):
         return Font(self.read(DIALOGUE_FONT, N_CHARS * 0x20))
 
     def extract(self) -> str:
-        dump = ''
+        dump = ""
         for block in self.blocks:
             for i, sentence in enumerate(block.sentences):
-                dump += f'<BLOCK {block.index}, SENTENCE {i}>\n'
-                dump += sentence.text + '\n\n\n'
+                dump += f"<BLOCK {block.index}, SENTENCE {i}>\n"
+                dump += sentence.text + "\n\n\n"
         return dump
 
     def reinsert(self, dump: str) -> None:
@@ -64,13 +63,15 @@ class ROM(GenericROM):
             block.reinsert()
 
         self.save()
-        self.assemble(asm_path('decompress.asm'),
-                      {'DICTIONARY': '{:06X}'.format(dictionary_start)})
+        self.assemble(
+            asm_path("decompress.asm"),
+            {"DICTIONARY": "{:06X}".format(dictionary_start)},
+        )
 
     def _parseDump(self, dump: str) -> None:
         matches = re.findall(
-            r'<BLOCK (\d+), SENTENCE (\d+)>\n((?:.*?)<CLOSE>)', dump,
-            re.DOTALL)
+            r"<BLOCK (\d+), SENTENCE (\d+)>\n((?:.*?)<CLOSE>)", dump, re.DOTALL
+        )
 
         for match in matches:
             block = int(match[0])

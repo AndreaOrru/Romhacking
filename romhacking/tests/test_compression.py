@@ -17,12 +17,14 @@ class CompressionTestCase(TestCase):
         self.assertListEqual(data, [0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC])
 
     def test_bytepairCompress(self):
-        string1 = 'low low low low entropy entropy entropy entropy'
-        string2 = 'entropy entropy entropy entropy low low low low'
-        data = [[
-            [ord(x) for x in string1],
-            [ord(x) for x in string2],
-        ]]
+        string1 = "low low low low entropy entropy entropy entropy"
+        string2 = "entropy entropy entropy entropy low low low low"
+        data = [
+            [
+                [ord(x) for x in string1],
+                [ord(x) for x in string2],
+            ]
+        ]
 
         dictionary, data = bytepairCompress(data)
         for compressed_string in data[0]:

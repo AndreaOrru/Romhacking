@@ -9,13 +9,13 @@ from romhacking.rom import ROM, ROMType
 
 
 def rom_path(file_name: str) -> str:
-    return join(dirname(__file__), 'roms', file_name)
+    return join(dirname(__file__), "roms", file_name)
 
 
 def assemble(file_name: str) -> str:
     asm = rom_path(file_name)
-    rom = splitext(asm)[0] + '.sfc'
-    call(['asar', asm, rom])
+    rom = splitext(asm)[0] + ".sfc"
+    call(["asar", asm, rom])
     return rom
 
 
@@ -24,7 +24,7 @@ class ROMTestCase(ABC):
         self.assertEqual(self.rom.size, 2048)
 
     def test_title(self):
-        self.assertEqual(self.rom.title, 'TEST')
+        self.assertEqual(self.rom.title, "TEST")
 
     def test_reset_vector(self):
         self.assertEqual(self.rom.reset_vector, 0x8000)
@@ -33,21 +33,20 @@ class ROMTestCase(ABC):
         self.assertEqual(self.rom.nmi_vector, 0x9000)
 
     def test_read(self):
-        byte = ord('T')
-        word = ord('T') | (ord('E') << 8)
-        addr = ord('T') | (ord('E') << 8) | (ord('S') << 16)
+        byte = ord("T")
+        word = ord("T") | (ord("E") << 8)
+        addr = ord("T") | (ord("E") << 8) | (ord("S") << 16)
         self.assertEqual(self.rom.readByte(0xFFC0), byte)
         self.assertEqual(self.rom.readWord(0xFFC0), word)
         self.assertEqual(self.rom.readAddress(0xFFC0), addr)
-        self.assertListEqual(self.rom.read(0xFFC0, 4),
-                             [ord(x) for x in 'TEST'])
+        self.assertListEqual(self.rom.read(0xFFC0, 4), [ord(x) for x in "TEST"])
 
     def test_write(self):
         rom = copy(self.rom)
-        byte = ord('A')
-        word = ord('A') | (ord('B') << 8)
-        addr = ord('A') | (ord('B') << 8) | (ord('C') << 16)
-        string = [ord(x) for x in 'ABCD']
+        byte = ord("A")
+        word = ord("A") | (ord("B") << 8)
+        addr = ord("A") | (ord("B") << 8) | (ord("C") << 16)
+        string = [ord(x) for x in "ABCD"]
 
         rom.writeByte(0xFFC0, byte)
         assert rom.readByte(0xFFC0) == byte
@@ -63,7 +62,7 @@ class ROMTestCase(ABC):
 
     def test_save(self):
         m = mock_open()
-        with patch('romhacking.rom.open', m):
+        with patch("romhacking.rom.open", m):
             self.rom.save()
         m.assert_called_once()
 
@@ -71,7 +70,7 @@ class ROMTestCase(ABC):
 class LoROMTest(ROMTestCase, TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.rom = ROM(assemble('lorom.asm'))
+        cls.rom = ROM(assemble("lorom.asm"))
 
     def test_type(self):
         self.assertEqual(self.rom.type, ROMType.LoROM)
@@ -85,7 +84,7 @@ class LoROMTest(ROMTestCase, TestCase):
 class HiROMTest(ROMTestCase, TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.rom = ROM(assemble('hirom.asm'))
+        cls.rom = ROM(assemble("hirom.asm"))
 
     def test_type(self):
         self.assertEqual(self.rom.type, ROMType.HiROM)

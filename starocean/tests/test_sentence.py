@@ -17,12 +17,11 @@ class SentenceTestCase(TestCase):
         self.assertListEqual(self.sentence.data[-3:], [0x01, 0xFF, 0xFF])
 
     def test_format_deformat(self):
-        self.assertListEqual(unformat(format(self.sentence.data)),
-                             self.sentence.data)
+        self.assertListEqual(unformat(format(self.sentence.data)), self.sentence.data)
 
     def test_text(self):
         self.assertIn("Man, it's quiet around here.", self.sentence.text)
-        self.assertTrue(self.sentence.text.endswith('<WAIT><CLOSE>'))
+        self.assertTrue(self.sentence.text.endswith("<WAIT><CLOSE>"))
 
     def test_setText(self):
         sentence = copy(self.sentence)

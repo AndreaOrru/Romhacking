@@ -5,18 +5,25 @@ from typing import List, Tuple
 from cached_property import cached_property
 
 from evermore.formatting import unformat
-from evermore.layout import (DTES, MTES, MTES_END, POINTERS, POINTERS_END,
-                             RELOCATED_TEXT, SCATTER_TABLE)
+from evermore.layout import (
+    DTES,
+    MTES,
+    MTES_END,
+    POINTERS,
+    POINTERS_END,
+    RELOCATED_TEXT,
+    SCATTER_TABLE,
+)
 from evermore.sentence import Sentence
 from romhacking.malloc import Heap
 from romhacking.rom import ROM as GenericROM
 
-SHA1_ORIGINAL = '79e7738630fff5699217ef58ecc421bc8fcbcd89'
+SHA1_ORIGINAL = "79e7738630fff5699217ef58ecc421bc8fcbcd89"
 N_SENTENCES = 3002
 
 
 def asm_path(file_name: str) -> str:
-    return join(dirname(__file__), 'asm', file_name)
+    return join(dirname(__file__), "asm", file_name)
 
 
 class ROM(GenericROM):
@@ -46,7 +53,7 @@ class ROM(GenericROM):
 
     @cached_property
     def mtes(self) -> List[str]:
-        mte = ''
+        mte = ""
         mtes = []
         for i in range(MTES, MTES_END):
             c = self.readByte(i)
@@ -54,7 +61,7 @@ class ROM(GenericROM):
                 mte += chr(c)
             else:
                 mtes.append(mte)
-                mte = ''
+                mte = ""
         return mtes
 
     @cached_property
@@ -73,9 +80,9 @@ class ROM(GenericROM):
         return sentences
 
     def extract(self) -> str:
-        dump = ''
+        dump = ""
         for i, sentence in enumerate(self.sentences):
-            dump += sentence.text + '\n'
+            dump += sentence.text + "\n"
         return dump
 
     def reinsert(self, dump: str) -> None:
@@ -93,12 +100,12 @@ class ROM(GenericROM):
             self.writeAddress(POINTERS + i * 3, pointer)
 
         self.save()
-        self.assemble(asm_path('text.asm'))
-        self.assemble(asm_path('font.asm'))
-        self.assemble(asm_path('thousands_separator.asm'))
+        self.assemble(asm_path("text.asm"))
+        self.assemble(asm_path("font.asm"))
+        self.assemble(asm_path("thousands_separator.asm"))
 
     def _parseDump(self, dump: str) -> List[List[int]]:
-        matches = re.findall(r'((?:.*?)<End>)\n', dump, re.DOTALL)
+        matches = re.findall(r"((?:.*?)<End>)\n", dump, re.DOTALL)
         assert len(matches) == N_SENTENCES
 
         sentences = []

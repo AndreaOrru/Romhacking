@@ -24,8 +24,8 @@ class Sentence:
         return format(self.data)
 
     def setText(self, text: str) -> None:
-        invalidate_property(self, 'data')
-        invalidate_property(self, 'text')
+        invalidate_property(self, "data")
+        invalidate_property(self, "text")
         self._new_data = unformat(text)
 
     @staticmethod

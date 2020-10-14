@@ -30,13 +30,13 @@ def readAddress(data: List[int], index: int) -> int:
 def writeWord(value: int, data: List[int], index: int) -> None:
     assert value <= 0xFFFF
     data[index] = value & 0xFF
-    data[index + 1] = (value >> 8)
+    data[index + 1] = value >> 8
 
 
 def writeAddress(value: int, data: List[int], index: int) -> None:
     assert value <= 0xFFFFFF
     writeWord(value & 0xFFFF, data, index)
-    data[index + 2] = (value >> 16)
+    data[index + 2] = value >> 16
 
 
 def convert16to8(data: List[int]) -> List[int]:

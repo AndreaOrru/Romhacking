@@ -5,7 +5,7 @@ from .base import TestCase
 
 class ROMTestCase(TestCase):
     def test_title(self):
-        self.assertTrue(self.rom.title.startswith('Star Ocean'))
+        self.assertTrue(self.rom.title.startswith("Star Ocean"))
 
     def test_address_translation(self):
         self.assertEqual(self.rom.readWord(0xE6D49C), 0x0510)

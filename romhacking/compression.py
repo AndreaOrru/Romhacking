@@ -17,7 +17,7 @@ def encode_12bit(strings: List[List[int]]) -> Tuple[List[int], List[int]]:
         for c in string:
             assert c <= 0xFFF
             if shifted:
-                output[-1] |= (c >> 8)
+                output[-1] |= c >> 8
                 output.append((c & 0xFF))
             else:
                 output.append((c >> 4))

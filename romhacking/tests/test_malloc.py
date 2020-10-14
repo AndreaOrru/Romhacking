@@ -9,7 +9,7 @@ from .test_rom import assemble
 class MallocTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.rom = ROM(assemble('hirom.asm'))
+        cls.rom = ROM(assemble("hirom.asm"))
 
     def setUp(self):
         self.heap = Heap(self.rom)
@@ -18,11 +18,14 @@ class MallocTestCase(TestCase):
         self.heap.addFreeArea(0xFDF000, 0xFE1000)
         self.heap.addFreeArea(0xFE1000, 0xFE2000)
         self.heap.addFreeArea(0xFE2000, 0xFF3000)
-        self.assertListEqual(list(self.heap.areas), [
-            (0xFDF000, 0xFE0000),
-            (0xFE0000, 0xFF0000),
-            (0xFF0000, 0xFF3000),
-        ])
+        self.assertListEqual(
+            list(self.heap.areas),
+            [
+                (0xFDF000, 0xFE0000),
+                (0xFE0000, 0xFF0000),
+                (0xFF0000, 0xFF3000),
+            ],
+        )
 
     def test_allocate(self):
         self.heap.addFreeArea(0xFDF000, 0xFF3000)

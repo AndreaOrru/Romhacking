@@ -7,10 +7,11 @@ from os.path import split
 from subprocess import call
 from typing import Dict, List, Optional
 
-PREFIX_SAVED_ROM = 'patched_'
+PREFIX_SAVED_ROM = "patched_"
 
 
 class ROMType(Enum):
+    PC = auto()
     LoROM = auto()
     HiROM = auto()
 
@@ -26,8 +27,8 @@ class Header:
 class ROM:
     def __init__(self, path: str):
         self.path = path
-        with open(path, 'rb') as f:
-            self.data = array('B', f.read())
+        with open(path, "rb") as f:
+            self.data = array("B", f.read())
         self.type = self._discoverType()
 
     @property
@@ -41,7 +42,7 @@ class ROM:
 
     @property
     def title(self) -> str:
-        title = ''
+        title = ""
         for i in range(21):
             c = self.readByte(Header.TITLE + i)
             if c == 0:
@@ -60,7 +61,7 @@ class ROM:
     @property
     def save_path(self):
         folder, name = split(self.path)
-        return f'{folder}/{PREFIX_SAVED_ROM}{name}'
+        return f"{folder}/{PREFIX_SAVED_ROM}{name}"
 
     def readByte(self, address: int) -> int:
         return self.data[self._translate(address)]
@@ -100,7 +101,7 @@ class ROM:
             self.writeByte(address + i, c)
 
     def save(self):
-        with open(self.save_path, 'wb') as f:
+        with open(self.save_path, "wb") as f:
             f.write(self.data.tobytes())
 
     def expand(self, new_size: int) -> None:
@@ -111,12 +112,11 @@ class ROM:
         self.data.extend(repeat(0, new_size - actual_size))
         self.size = new_size
 
-    def assemble(self, asm_path: str,
-                 defines: Optional[Dict[str, str]] = None) -> None:
+    def assemble(self, asm_path: str, defines: Optional[Dict[str, str]] = None) -> None:
         if defines is None:
             defines = {}
-        args = [f'-D{k}={v}' for k, v in defines.items()]
-        call(['asar', *args, asm_path, self.save_path])
+        args = [f"-D{k}={v}" for k, v in defines.items()]
+        call(["asar", *args, asm_path, self.save_path])
 
     def sha1(self):
         return sha1(self.data).hexdigest()
@@ -124,8 +124,10 @@ class ROM:
     def _translate(self, address: int) -> int:
         if self.type == ROMType.HiROM:
             return address & 0x3FFFFF
-        else:
+        elif self.type == ROMType.LoROM:
             return ((address & 0x7F0000) >> 1) | (address & 0x7FFF)
+        else:
+            return address
 
     def _discoverType(self) -> ROMType:
         if len(self.data) <= 0x8000:
