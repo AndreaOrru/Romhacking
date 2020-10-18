@@ -1,0 +1,17 @@
+##########
+#  DATA  #
+##########
+
+# Block indexes.
+FF4E11 - FF5045   # Assuming same number of blocks of English version.
+
+
+##########
+#  CODE  #
+##########
+
+# Load the block index.
+C6111D
+
+# Load the block into memory.
+C04984
