@@ -11,16 +11,12 @@ org $C060EF
 ;; MTE tables.
 org $B5ED60
 mte_pointers:
-  dw $0000
-  dw $0006
+  incbin "ptrs.bin"
 ;; Space for 256 entries.
 
 org $B5EF80
-mtes:   
-  db "MARIO"
-  db $00
-  db "BOWSER"
-  db $00
+mtes:
+  incbin "dict.bin"
 ;; Space for ~4k of text.
 
 
@@ -64,7 +60,7 @@ extended_mte:
 
   ;; Read the content of the MTE.
   jml $C05F13
-  
+
 .no_extended:
   ;; Original incipit of the function.
   plb
