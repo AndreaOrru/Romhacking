@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-text = open("dict.txt").read().split("\n")
+text = [x for x in open("dict.txt").read().split("\n") if x]
 
 bin_dict = bytearray()
 bin_ptrs = bytearray()

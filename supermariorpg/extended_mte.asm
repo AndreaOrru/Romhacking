@@ -22,8 +22,8 @@ mtes:
 
 org $FF9C40
 extended_mte:
-  ;; $26 = $13 * 2 = Special byte for extended MTE.
-  cmp #$26
+  ;; $34 = $1A * 2 = Special byte for extended MTE.
+  cmp #$34
   bne .no_extended
 
 .extended:
