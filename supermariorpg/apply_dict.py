@@ -3,6 +3,19 @@
 import sys
 
 
+def substitute_accents(s):
+    s = s.replace("È", "[94]")
+    s = s.replace("À", "[95]")
+    s = s.replace("à", "[128]")
+    s = s.replace("à", "[128]")
+    s = s.replace("é", "[129]")
+    s = s.replace("è", "[130]")
+    s = s.replace("ì", "[131]")
+    s = s.replace("ò", "[132]")
+    s = s.replace("ù", "[133]")
+    return s
+
+
 def substitute_spaces(s):
     while True:
         pos = s.find("     ")
@@ -31,7 +44,8 @@ new_script = []
 for line in script:
     prefix, dialogue = line[:7], line[7:]
     for n, mte in mtes:
-        bin_mte = "[26][{}]".format(n)
+        bin_mte = "[14][{}]".format(n)
+        dialogue = substitute_accents(dialogue)
         dialogue = substitute_spaces(dialogue)
         dialogue = dialogue.replace(mte, bin_mte)
     new_script.append(prefix + dialogue)
