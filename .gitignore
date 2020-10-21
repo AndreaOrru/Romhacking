@@ -143,3 +143,4 @@ cython_debug/
 *.smc
 *.srm
 *.bst
+*.bak
