@@ -15,3 +15,7 @@ C6111D
 
 # Load the block into memory.
 C04984
+
+# Load the pointer to the actual dialogue.
+# Hook up the decompression routine here.
+C21C98
