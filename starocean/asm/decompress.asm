@@ -1,7 +1,3 @@
-arch 65816
-hirom
-
-
 ;;;;
 ;; Decompress a string of dialogue.
 ;;
@@ -11,8 +7,8 @@ hirom
 ;;
 ;; DISCARDS: X
 ;;
-org $FFC000
-decompressText:
+org !decompress_addr
+DecompressText:
   ;; Preserve value of Y.
   phy
   ;; Preserve RAM values.
@@ -54,8 +50,8 @@ decompressText:
   sty $03D5                     ; $03D5 = beginning of decompression buffer.
 
 .loop:
-  jsr fetchSymbol
-  jsr expandBytepair
+  jsr FetchSymbol
+  jsr ExpandBytepair
   cmp #$FFFF
   bne .loop
 
@@ -85,7 +81,7 @@ decompressText:
 ;;
 ;; OUT:  A = Value of the last expanded symbol.
 ;;
-expandBytepair:
+ExpandBytepair:
   phx
 
   cmp #$0100
@@ -99,10 +95,10 @@ expandBytepair:
   tax
 
   lda $!DICTIONARY,x
-  jsr expandBytepair
+  jsr ExpandBytepair
 
   lda $!DICTIONARY+2,x
-  jsr expandBytepair
+  jsr ExpandBytepair
 
   bra .return
 
@@ -140,7 +136,7 @@ endmacro
 ;;
 ;; OUT:      A = Value of the symbol.
 ;;
-fetchSymbol:
+FetchSymbol:
   phy
 
   ;; Y = (Bits / 8) = Byte index.
@@ -186,6 +182,3 @@ bitmasks:
   db $20
   db $40
   db $80
-
-org $C2FF86
-  lda bitmasks,x

@@ -1,5 +1,6 @@
 import re
 from os.path import dirname, join
+from textwrap import wrap
 from typing import List, Tuple
 
 from cached_property import cached_property
@@ -11,10 +12,12 @@ from romhacking.rom import ROM as GenericROM
 from romhacking.rom import ROMType
 from starocean.block import Block, BlockType
 from starocean.layout import DIALOGUE_FONT, UNUSED_AREA1, UNUSED_AREA2, UNUSED_AREA3
+from starocean.rom_version import ROMVersion
 
 N_BLOCKS = 188
 N_CHARS = 0x60
-SHA1_ORIGINAL = "8574f0c49b0e823f21763331c2d66225b95c1653"
+SHA1_DEJAP = "8574f0c49b0e823f21763331c2d66225b95c1653"
+SHA1_MAGNO = "561495e007b1739fbcfb4cf26657db8744c17c5c"
 
 
 def asm_path(file_name: str) -> str:
@@ -25,7 +28,13 @@ class ROM(GenericROM):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        assert self.sha1() == SHA1_ORIGINAL
+        sha1 = self.sha1()
+        if sha1 == SHA1_DEJAP:
+            self.version = ROMVersion.DEJAP
+        elif sha1 == SHA1_MAGNO:
+            self.version = ROMVersion.MAGNO
+        else:
+            assert False
 
         self.type = ROMType.HiROM
         self.heap = self._setupFreeSpace()
@@ -41,9 +50,18 @@ class ROM(GenericROM):
     def font(self) -> Font:
         return Font(self.read(DIALOGUE_FONT, N_CHARS * 0x20))
 
+    @property
+    def text_type(self):
+        if self.version == ROMVersion.DEJAP:
+            return BlockType.DEJAP_TEXT
+        else:
+            return BlockType.MAGNO_TEXT
+
     def extract(self) -> str:
         dump = ""
         for block in self.blocks:
+            if block.sentences:
+                dump += f"<HEADER {block.index}, {block.header_str}>\n"
             for i, sentence in enumerate(block.sentences):
                 dump += f"<BLOCK {block.index}, SENTENCE {i}>\n"
                 dump += sentence.text + "\n\n\n"
@@ -51,6 +69,7 @@ class ROM(GenericROM):
 
     def reinsert(self, dump: str) -> None:
         self._parseDump(dump)
+        breakpoint()
         block_indexes, blocks_data = self._collectTextBlocks()
 
         dictionary, compressed_data = bytepairCompress(blocks_data)
@@ -61,14 +80,16 @@ class ROM(GenericROM):
             block.setData(block_data)
             block.start = self.heap.allocate(block.size)
             block.reinsert()
-
         self.save()
+
+        asm_file = "dejap.asm" if self.version == ROMVersion.DEJAP else "magno.asm"
         self.assemble(
-            asm_path("decompress.asm"),
+            asm_path(asm_file),
             {"DICTIONARY": "{:06X}".format(dictionary_start)},
         )
 
     def _parseDump(self, dump: str) -> None:
+        self._parseHeaders(dump)
         matches = re.findall(
             r"<BLOCK (\d+), SENTENCE (\d+)>\n((?:.*?)<CLOSE>)", dump, re.DOTALL
         )
@@ -79,12 +100,20 @@ class ROM(GenericROM):
             text = match[2]
             self.blocks[block].sentences[sentence].setText(text)
 
+    def _parseHeaders(self, dump: str) -> None:
+        matches = re.findall(r"<HEADER (\d+), ([0-9A-F]+)>", dump)
+        for match in matches:
+            block = int(match[0])
+            header = [int(x, 16) for x in wrap(match[1], 2)]
+            self.blocks[block].header = header
+            self.blocks[block]._parseBlock()
+
     def _collectTextBlocks(self) -> Tuple[List[int], List[List[List[int]]]]:
         block_indexes = []
         blocks_data = []
 
         for block in self.blocks:
-            if block.type == BlockType.TEXT:
+            if block.type == BlockType.DEJAP_TEXT:
                 blocks_data.append([s.data for s in block.sentences])
                 block_indexes.append(block.index)
 
@@ -94,12 +123,13 @@ class ROM(GenericROM):
         heap = Heap(self)
 
         for block in self.blocks:
-            if block.type == BlockType.TEXT:
+            if block.type == self.text_type:
                 heap.addFreeArea(block.start, block.end)
 
-        heap.addFreeArea(*UNUSED_AREA1)
-        heap.addFreeArea(*UNUSED_AREA2)
-        heap.addFreeArea(*UNUSED_AREA3)
+        if self.version == ROMVersion.DEJAP:
+            heap.addFreeArea(*UNUSED_AREA1)
+            heap.addFreeArea(*UNUSED_AREA2)
+            heap.addFreeArea(*UNUSED_AREA3)
 
         return heap
 

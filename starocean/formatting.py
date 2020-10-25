@@ -2,7 +2,9 @@ from typing import List
 
 from bidict import bidict
 
-dictionary = bidict(
+from starocean.rom_version import ROMVersion
+
+dictionary_dejap = bidict(
     {
         **{x: chr(x + 0x2A) for x in range(0x06, 0x10)},  # 0-9
         **{x: chr(x + 0x31) for x in range(0x10, 0x2A)},  # A-Z
@@ -35,6 +37,40 @@ dictionary = bidict(
     }
 )
 
+dictionary_magno = bidict(
+    {
+        **{x: chr(x + 0x2A) for x in range(0x06, 0x10)},  # 0-9
+        **{x: chr(x + 0x31) for x in range(0x10, 0x2A)},  # A-Z
+        **{x: chr(x + 0x30) for x in range(0x31, 0x4B)},  # a-z
+        **{
+            0x00: "\n",
+            0x52: " ",
+            0x53: "'",
+            0x54: "!",
+            0x55: "~",
+            0x56: "?",
+            0x57: ",",
+            0x58: ".",
+            0x59: ":",
+            0x5A: ";",
+            0x5B: "“",
+            0x5C: "”",
+            0x5D: "/",
+            0x5E: "*",
+            0x5F: "+",
+            0x60: "-",
+            0x61: "=",
+            0x62: "#",
+            0x63: "%",
+            0x64: "&",
+            0x65: "(",
+            0x66: ")",
+            0x67: "<",
+            0x68: ">",
+        },
+    }
+)
+
 names = bidict(
     {
         0x00: "RATIX",
@@ -53,7 +89,15 @@ names = bidict(
 )
 
 
-def format(data: List[int]) -> str:
+def dictionary(rom_version):
+    if rom_version == ROMVersion.DEJAP:
+        return dictionary_dejap
+    else:
+        return dictionary_magno
+
+
+def format(data: List[int], rom_version: ROMVersion) -> str:
+    d = dictionary(rom_version)
     text = ""
     i = 0
     while i < len(data):
@@ -63,7 +107,7 @@ def format(data: List[int]) -> str:
         w = data[i + 3] if i + 3 < len(data) else None
 
         try:
-            text += dictionary[x]
+            text += d[x]
         except KeyError:
             if x == 0x01:
                 text += "<WAIT>"
@@ -90,13 +134,14 @@ def format(data: List[int]) -> str:
     return text
 
 
-def unformat(text: str) -> List[int]:
+def unformat(text: str, rom_version: ROMVersion) -> List[int]:
+    d = dictionary(rom_version)
     output = []
     i = 0
     while i < len(text):
         c = text[i]
         if c != "<":
-            output.append(dictionary.inverse[c])
+            output.append(d.inverse[c])
             i += 1
             continue
 

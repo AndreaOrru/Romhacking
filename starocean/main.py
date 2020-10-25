@@ -5,7 +5,7 @@ from starocean.rom import ROM
 
 @click.group()
 def cli():
-    """Star Ocean (SNES DeJap) text extractor/reinserter."""
+    """Star Ocean (SNES DeJap/Magno) text extractor/reinserter."""
     ...
 
 

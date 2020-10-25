@@ -5,16 +5,20 @@ from cached_property import cached_property
 
 from romhacking.compression import encode_12bit
 from romhacking.utils import convert16to8, pairwise, readWord, writeWord
-from starocean.layout import BLOCK_INDEX, HUFFMAN_TREE
+from starocean.layout import BLOCK_INDEX_DEJAP, BLOCK_INDEX_MAGNO, HUFFMAN_TREE
+from starocean.rom_version import ROMVersion
 from starocean.sentence import Sentence
 
 HEADER_SIZE = 9
 
 
 class BlockType(IntEnum):
-    TEXT = 0x85
-    EVENTS = 0x86
     OTHER = 0x80
+    OTHER1 = 0x81
+    OTHER2 = 0x83
+    DEJAP_TEXT = 0x85
+    EVENTS = 0x86
+    MAGNO_TEXT = 0x88
 
 
 class Block:
@@ -46,6 +50,10 @@ class Block:
     def data(self) -> List[int]:
         return self.header + convert16to8(self.indexes) + self.content
 
+    @property
+    def header_str(self) -> str:
+        return "".join("{:02X}".format(b) for b in self.header)
+
     @cached_property
     def sentences(self) -> List[Sentence]:
         assert not self._new_data
@@ -71,7 +79,10 @@ class Block:
 
     @property
     def _block_index_address(self):
-        return BLOCK_INDEX + (self.index * 3)
+        if self._rom.version == ROMVersion.DEJAP:
+            return BLOCK_INDEX_DEJAP + (self.index * 3)
+        else:
+            return BLOCK_INDEX_MAGNO + (self.index * 3)
 
     @property
     def _indexes_start(self) -> int:
@@ -84,21 +95,29 @@ class Block:
 
     @property
     def _content_start(self) -> int:
-        offset = self._rom.readWord(self.start + 3) + 3
+        offset = readWord(self.header, 3) + 3
         return self.start + offset
 
     def _parseBlock(self) -> None:
-        assert len(self.header) == len(self.indexes) == len(self.content) == 0
+        self.indexes = []
+        self.content = []
 
-        for i in range(HEADER_SIZE):
-            self.header.append(self._rom.readByte(self.start + i))
-        for i in range(self._indexes_start, self._content_start, 2):
-            self.indexes.append(self._rom.readWord(i))
-        for i in range(self._content_start, self.end):
-            self.content.append(self._rom.readByte(i))
+        if self.header:
+            for i in range(self._indexes_start, self._content_start, 2):
+                self.indexes.append(0)
+        else:
+            for i in range(HEADER_SIZE):
+                self.header.append(self._rom.readByte(self.start + i))
+            for i in range(self._indexes_start, self._content_start, 2):
+                self.indexes.append(self._rom.readWord(i))
+            for i in range(self._content_start, self.end):
+                self.content.append(self._rom.readByte(i))
 
     def _decompressRange(self, index: int, next_index: int) -> List[int]:
         assert not self._new_data
+        if index == next_index:
+            return []
+
         output: List[int] = []
 
         next_byte_index = (next_index // 8) - self._indexes_size

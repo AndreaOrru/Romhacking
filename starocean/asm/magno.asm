@@ -2,6 +2,10 @@ arch 65816
 exhirom
 
 
+!{decompress_addr} = $FFC000
+incsrc "decompress.asm"
+
+
 ;;------------------------------------------------------------------------------
 org $C04984
 LoadBlockInRAM:
@@ -79,3 +83,7 @@ LoadDialogueBlockDeJap:
     sta $0000,x
     plp
     rtl
+
+
+org $C21C98
+    jsl DecompressText

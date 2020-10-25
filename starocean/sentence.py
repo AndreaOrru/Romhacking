@@ -21,12 +21,12 @@ class Sentence:
 
     @cached_property
     def text(self) -> str:
-        return format(self.data)
+        return format(self.data, self._rom.version)
 
     def setText(self, text: str) -> None:
         invalidate_property(self, "data")
         invalidate_property(self, "text")
-        self._new_data = unformat(text)
+        self._new_data = unformat(text, self._rom.version)
 
     @staticmethod
     def _pushByte(data: List[int], value: int) -> None:
