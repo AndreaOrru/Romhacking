@@ -19,6 +19,9 @@ N_CHARS = 0x60
 SHA1_DEJAP = "8574f0c49b0e823f21763331c2d66225b95c1653"
 SHA1_MAGNO = "561495e007b1739fbcfb4cf26657db8744c17c5c"
 
+# Blocks used in the intro.
+BLOCK_BLACKLIST = [59]
+
 
 def asm_path(file_name: str) -> str:
     return join(dirname(__file__), "asm", file_name)
@@ -60,6 +63,8 @@ class ROM(GenericROM):
     def extract(self) -> str:
         dump = ""
         for block in self.blocks:
+            if block.index in BLOCK_BLACKLIST:
+                continue
             if block.sentences:
                 dump += f"<HEADER {block.index}, {block.header_str}>\n"
             for i, sentence in enumerate(block.sentences):
@@ -69,7 +74,6 @@ class ROM(GenericROM):
 
     def reinsert(self, dump: str) -> None:
         self._parseDump(dump)
-        breakpoint()
         block_indexes, blocks_data = self._collectTextBlocks()
 
         dictionary, compressed_data = bytepairCompress(blocks_data)
@@ -123,6 +127,8 @@ class ROM(GenericROM):
         heap = Heap(self)
 
         for block in self.blocks:
+            if block.index in BLOCK_BLACKLIST:
+                continue
             if block.type == self.text_type:
                 heap.addFreeArea(block.start, block.end)
 

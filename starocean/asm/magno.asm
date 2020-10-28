@@ -35,9 +35,19 @@ HandleDeJapBlock:
     cmp #$85                    ; $85 = DeJap compression.
     beq LoadDialogueBlockDeJap
 .isMagno:
+    ;; If the dialogue is not DeJap, reset
+    ;; the block type signal word.
+    pha
+    lda #$00
+    sta $7EB870
+    sta $7EB871
+    pla
     jml LoadDialogueBlockMagno
 
 LoadDialogueBlockDeJap:
+    ;; Signal DeJap block for later.
+    lda #$85
+    sta $7EB870
     ;; Copy only the initial part of the block (pointers).
     lda $B3
     pha
@@ -84,6 +94,22 @@ LoadDialogueBlockDeJap:
     plp
     rtl
 
+;; Call our decompression routine,
+;; but only for $85 block types.
+MaybeDecompressText:
+    tax
+    pha
+    lda $B870
+    cmp #$0085
+    beq .dejap
+.magno:
+    pla
+    lda $B873,x
+    rtl
+.dejap:
+    pla
+    jml DecompressText
+
 
 org $C21C98
-    jsl DecompressText
+    jsl MaybeDecompressText

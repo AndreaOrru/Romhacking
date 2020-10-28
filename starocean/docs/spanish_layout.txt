@@ -19,3 +19,6 @@ C04984
 # Load the pointer to the actual dialogue.
 # Hook up the decompression routine here.
 C21C98
+
+# Load the intro graphics with S-DD1.
+CC05DE
