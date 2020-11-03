@@ -19,6 +19,11 @@ arch 65816
 lorom
 
 
+;; Add accented characters.
+org $078242
+    incbin "font.bin"
+
+
 ;;;;
 ;; Add control byte $F0 (function 1).
 ;;
@@ -33,6 +38,56 @@ LoadDialogueByte_1:
     nop
 Check80_1:
     ;; cmp #$0080
+    ;; bcc lessThan80
+    ;; eor $1D
+org $009DCB
+    ;; sta [$1A]
+    ;; inc $1A
+    jsl AccentedFont_1
+    ;; inc $1A
+
+
+org $00DE0F
+OriginalLoadFontProperties:
+    ;; ...
+org $00DE28
+    ;; and #$0FFE
+    ;; sta $0D
+    jsl LoadAccentedFontPointer
+    nop
+org $00DEB6
+    rtl
+
+org $07F850
+LoadAccentedFontPointer:
+    and #$0FFE
+    phx
+    pha
+    lda $7F0000
+    beq .normalChar
+.accentedFont:
+    sec
+    sbc #$00DE
+    asl
+    tax
+    pla
+    lda.l .table,x
+    sta $0d
+    plx
+    rtl
+.normalChar:
+    pla
+    plx
+    sta $0d
+    rtl
+.table:
+    dw $0252                    ; È
+    dw $0254                    ; à
+    dw $0256                    ; é
+    dw $0258                    ; è
+    dw $025A                    ; ì
+    dw $025C                    ; ò
+    dw $025E                    ; ù
 
 
 ;;;;
@@ -49,6 +104,13 @@ LoadDialogueByte_2:
     nop
 Check80_2:
     ;; cmp #$0080
+    ;; bcc lessThan80
+org $00E082
+    ;; pha
+    ;; jsr OriginalLoadFontProperties
+    jsl LoadFontProperties
+    ;; pla
+    nop
 
 
 ;;;;
@@ -108,6 +170,58 @@ CheckF0_1:
 CheckF0_2:
     %CheckF0(2)
 
+AccentedFont_1:
+.check_bank:
+    pha
+    lda $19
+    and #$00FF
+    cmp #$0010
+    pla
+    bcc .write
+.check_accented:
+    cmp #$00DE
+    bcc .write
+.accented:
+    sec
+    sbc #$00B5
+.write:
+    sta [$1A]
+    inc $1A
+    rtl
+
+LoadFontProperties:
+    cmp #$00DE
+    bcc .normalChar
+    cmp #$00E5
+    bcs .normalChar
+.accentedChar:
+    sta $7F0000
+    sec
+    sbc #$00DE
+    asl
+    tax
+    lda.l .table,x
+
+    jsl OriginalLoadFontProperties
+
+    lda #$0000
+    sta $7F0000
+    lda #$00B5
+    rtl
+.normalChar:
+    pha
+    jsl $DE0F
+    pla
+    rtl
+.table:
+    dw $00AA                    ; È
+    dw $009A                    ; à
+    dw $00B5                    ; é
+    dw $00B5                    ; è
+    dw $00BF                    ; ì
+    dw $00B5                    ; ò
+    dw $00B5                    ; ù
+
 
 ;;;;
 ;; Data.
@@ -128,7 +242,7 @@ org $10A000
 FirstSentenceNew:
     db $1A
     db $00
-    db $AB,$C2,$B5,$B8,$C5,$C7,$C2,$FF,$C3,$C8,$C3,$C3,$B4,$CE
+    db $AB,$C2,$B5,$B8,$C5,$C7,$C2,$FF,$C3,$C8,$C3,$C3,$E3,$CE,$FF,$DE,$DF,$E0,$E1,$E2,$E3,$E4
 
     db $F0
     dw $0001
