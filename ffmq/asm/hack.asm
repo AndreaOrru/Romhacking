@@ -43,7 +43,7 @@ Check80_1:
 org $009DCB
     ;; sta [$1A]
     ;; inc $1A
-    jsl AccentedFont_1
+    jsl AccentedFont
     ;; inc $1A
 
 
@@ -63,7 +63,7 @@ LoadAccentedFontPointer:
     and #$0FFE
     phx
     pha
-    lda $7F0000
+    lda $7FA3FE
     beq .normalChar
 .accentedFont:
     sec
@@ -120,6 +120,15 @@ macro CheckF0(n)
     lda [$17]                   ; Load byte.
     inc $17                     ; Advance pointer.
     and #$00FF
+
+    ;; Check if we're inside menu.
+    pha
+    lda $7F0000
+    cmp #$2CFE
+    beq .check80
+    pla
+    pha
+
     ;; Check against $F0.
     cmp #$00F0
     bne .check80
@@ -150,6 +159,7 @@ macro CheckF0(n)
     ;; Restore state.
     plx
     plp
+    pla
     if <n> == 1
         jml LoadDialogueByte_1
     else
@@ -157,6 +167,7 @@ macro CheckF0(n)
     endif
 
 .check80:
+    pla
     if <n> == 1
         jml Check80_1
     else
@@ -170,14 +181,14 @@ CheckF0_1:
 CheckF0_2:
     %CheckF0(2)
 
-AccentedFont_1:
+AccentedFont:
 .check_bank:
     pha
-    lda $19
-    and #$00FF
-    cmp #$0010
+    lda $7F0000
+    cmp #$2CFE
+    beq .write
     pla
-    bcc .write
+    pha
 .check_accented:
     cmp #$00DE
     bcc .write
@@ -185,6 +196,7 @@ AccentedFont_1:
     sec
     sbc #$00B5
 .write:
+    pla
     sta [$1A]
     inc $1A
     rtl
@@ -195,7 +207,7 @@ LoadFontProperties:
     cmp #$00E5
     bcs .normalChar
 .accentedChar:
-    sta $7F0000
+    sta $7FA3FE
     sec
     sbc #$00DE
     asl
@@ -205,7 +217,7 @@ LoadFontProperties:
     jsl OriginalLoadFontProperties
 
     lda #$0000
-    sta $7F0000
+    sta $7FA3FE
     lda #$00B5
     rtl
 .normalChar:
