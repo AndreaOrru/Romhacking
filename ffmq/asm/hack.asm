@@ -55,6 +55,22 @@ org $00DE28
     ;; sta $0D
     jsl LoadAccentedFontPointer
     nop
+org $00DE40
+    ;; and #$000F
+    ;; sta $13
+    ;; sep #$20
+    ;; lda $E552,x
+    ;; sta $4202
+    jsl RepositionAccentedFont
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 org $00DEB6
     rtl
 
@@ -81,7 +97,7 @@ LoadAccentedFontPointer:
     sta $0d
     rtl
 .table:
-    dw $0252                    ; È
+    dw $0212                    ; È
     dw $0254                    ; à
     dw $0256                    ; é
     dw $0258                    ; è
@@ -89,6 +105,27 @@ LoadAccentedFontPointer:
     dw $025C                    ; ò
     dw $025E                    ; ù
 
+RepositionAccentedFont:
+    and #$000F
+    sta $13
+    sep #$20
+    lda $E552,x
+    sta $4202
+
+    lda $7FA3FE
+    cmp #$DE
+    beq .adjustE
+    cmp #$E2
+    beq .adjustI
+    rtl
+.adjustE:
+    stz $4202
+    rtl
+.adjustI:
+    inc $13
+    lda #$01
+    sta $4202
+    rtl
 
 ;;;;
 ;; Add control byte $F0 (function 2).
@@ -230,7 +267,7 @@ LoadFontProperties:
     dw $009A                    ; à
     dw $00B5                    ; é
     dw $00B5                    ; è
-    dw $00BF                    ; ì
+    dw $00BC                    ; ì
     dw $00B5                    ; ò
     dw $00B5                    ; ù
 
