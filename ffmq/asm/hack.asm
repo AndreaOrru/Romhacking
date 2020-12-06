@@ -8,12 +8,12 @@ org $7FD7
     db $0A
 
 ;; Fill with zeroes till 1MB.
-!address = $80000
-while !address < $100000
-    org !address
-        fillbyte $00 : fill $10000
-    !address #= !address+$10000
-endif
+;!address = $80000
+;while !address < $100000
+;    org !address
+;        fillbyte $00 : fill $10000
+;    !address #= !address+$10000
+;endif
 
 arch 65816
 lorom
@@ -225,16 +225,22 @@ CheckF0_2:
     %CheckF0(2)
 
 AccentedFont:
-.check_bank:
+.check_mode:
     pha
     lda $7F0000
     cmp #$2CFE
     beq .write
+.check_ram:
+    lda $17
+    cmp #$1FFF
+    bcc .write
     pla
     pha
 .check_accented:
     cmp #$00DE
     bcc .write
+    cmp #$00E5
+    bcs .write
 .accented:
     sec
     sbc #$00B5
@@ -245,10 +251,17 @@ AccentedFont:
     rtl
 
 LoadFontProperties:
+.check_range:
     cmp #$00DE
     bcc .normalChar
     cmp #$00E5
     bcs .normalChar
+.check_ram:
+    pha
+    lda $17
+    cmp #$1FFF
+    pla
+    bcc .normalChar
 .accentedChar:
     sta $7FA3FE
     sec
