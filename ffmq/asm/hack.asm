@@ -127,6 +127,12 @@ RepositionAccentedFont:
     sta $4202
     rtl
 
+
+org $00E03F
+    jsl HandleNewline
+    rts
+
+
 ;;;;
 ;; Add control byte $F0 (function 2).
 ;;
@@ -271,27 +277,29 @@ LoadFontProperties:
     dw $00B5                    ; ò
     dw $00B5                    ; ù
 
+HandleNewline:
+    pha
+    tay
+    lda $7FA3FE
+    bne .accentedChar
+.normalChar:
+    tya
+.accentedChar:
+    tay
+    lda #$0080
+    and $00dd
+    bne .return
+    tya
+    ldx $00ca
+    sta $7e35d9,x
+    inc $00ca
+.return:
+    pla
+    rtl
+
 
 ;;;;
 ;; Data.
 ;;
 org $109000
 PointerTable:
-    dl $10A000
-    dl $03F87B
-
-
-org $03F830
-FirstSentenceOld:
-    db $F0
-    dw $0000
-
-
-org $10A000
-FirstSentenceNew:
-    db $1A
-    db $00
-    db $AB,$C2,$B5,$B8,$C5,$C7,$C2,$FF,$C3,$C8,$C3,$C3,$E3,$CE,$FF,$DE,$DF,$E0,$E1,$E2,$E3,$E4
-
-    db $F0
-    dw $0001
