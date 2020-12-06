@@ -230,10 +230,6 @@ AccentedFont:
     lda $7F0000
     cmp #$2CFE
     beq .write
-.check_ram:
-    lda $17
-    cmp #$1FFF
-    bcc .write
     pla
     pha
 .check_accented:
