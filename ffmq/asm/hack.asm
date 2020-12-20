@@ -169,9 +169,9 @@ macro CheckF0(n)
     lda $7F0000
     cmp #$2CFE
     bne .checkF0
-.checkF0F1:
+.checkF0F3:
     lda [$17]
-    cmp #$F1F0
+    cmp #$F3F0
     bne .check80Load
     inc $17
     inc $17
