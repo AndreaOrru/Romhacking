@@ -164,15 +164,28 @@ macro CheckF0(n)
     inc $17                     ; Advance pointer.
     and #$00FF
 
-    ;; Check if we're inside menu.
+    ;; Check bank.
     pha
+    lda $19
+    and #$00FF
+    cmp #$0010
+    bcs .checkF0
+    ;; Check if we're inside menu.
     lda $7F0000
     cmp #$2CFE
-    beq .check80
+    bne .checkF0
+.inMenu:
+    lda [$17]
+    and #$00FF
+    cmp #$00F1
+    bne .check80
+    inc $17
+    bra .isF0
+
+.checkF0:
+    ;; Check against $F0.
     pla
     pha
-
-    ;; Check against $F0.
     cmp #$00F0
     bne .check80
 
