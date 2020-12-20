@@ -160,12 +160,7 @@ org $00E082
 ;; Implement byte F0 - jump to pointer.
 ;;
 macro CheckF0(n)
-    lda [$17]                   ; Load byte.
-    inc $17                     ; Advance pointer.
-    and #$00FF
-
     ;; Check bank.
-    pha
     lda $19
     and #$00FF
     cmp #$0010
@@ -174,18 +169,19 @@ macro CheckF0(n)
     lda $7F0000
     cmp #$2CFE
     bne .checkF0
-.inMenu:
+.checkF0F1:
     lda [$17]
-    and #$00FF
-    cmp #$00F1
-    bne .check80
+    cmp #$F1F0
+    bne .check80Load
+    inc $17
     inc $17
     bra .isF0
 
 .checkF0:
     ;; Check against $F0.
-    pla
-    pha
+    lda [$17]
+    inc $17
+    and #$00FF
     cmp #$00F0
     bne .check80
 
@@ -215,15 +211,17 @@ macro CheckF0(n)
     ;; Restore state.
     plx
     plp
-    pla
     if <n> == 1
         jml LoadDialogueByte_1
     else
         jml LoadDialogueByte_2
     endif
 
+.check80Load:
+    lda [$17]
+    inc $17
+    and #$00FF
 .check80:
-    pla
     if <n> == 1
         jml Check80_1
     else
