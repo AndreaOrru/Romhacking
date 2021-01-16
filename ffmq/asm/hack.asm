@@ -44,7 +44,8 @@ org $009DCB
     ;; sta [$1A]
     ;; inc $1A
     jsl AccentedFont
-    ;; inc $1A
+    nop
+    nop
 
 
 org $00DE0F
@@ -255,6 +256,37 @@ AccentedFont:
     pla
     sta [$1A]
     inc $1A
+    inc $1A
+.check_magic_menu:
+    cmp #$2CDF
+    bne .return
+    lda $1A
+    cmp #$29F6
+    bne .return
+
+    lda $7E29E2
+    sta $7E29EE
+    lda $7E29E4
+    sta $7E29F0
+    lda $7E29E6
+    sta $7E29F2
+    lda $7E29E8
+    sta $7E29F4
+
+    lda #$2CDE
+    sta $7E29E2
+    lda #$2CDF
+    sta $7E29E4
+
+    lda #$2C5C
+    sta $7E29E6
+    lda #$2C5D
+    sta $7E29E8
+    lda #$2C5E
+    sta $7E29EA
+    lda #$2C5F
+    sta $7E29EC
+.return:
     rtl
 
 LoadFontProperties:
