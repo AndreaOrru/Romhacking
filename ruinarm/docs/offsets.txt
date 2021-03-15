@@ -1,0 +1,72 @@
+Offsets:
+
+GFX:
+$9F8000 (0xF8000)
+
+TEXT:
+$838000 (0x18000)   Pointers Dictionary
+$838120 (0x18120)   Dictionary
+
+$838642 (0x18642)   Pointers to Script 1?
+$83887E (0x1887E)   Script 1
+
+$83B54A (0x1B54A)   Pointers to Script 2
+$83B74A (0x1B74A)   Script 2
+
+$84E13E (0x2613E)   Pointers to Text
+$84E15E (0x2615E)   Text
+
+$BB846A (0x1D846A)  Pointers to Script 3
+$BB866A (0x1D866A)  Script 3
+
+$BBBF0A (0x1DBF0A)  Pointers to Script 4
+$BBC10A (0x1DC10A)  Script 4
+
+--------------------------------------------------------------------------------
+TITLE:
+
+$afeed8 - $afeed4   Pointer to title data
+$afb1cd             Title data
+$808f01             Decompression routine
+
+
+$84D7D1 (0x0257D1)  Name your character question
+
+0c // Text Position
+000a
+
+8e01=主
+b401=人
+5801=公
+1900=の
+4c02=名
+c801=前
+2d00=を
+8101=自
+3802=分
+3c00=で
+
+8c // Text Position
+0006
+
+2f02=付
+0900=け
+1f00=ま
+0d00=す
+0600=か
+e500=？
+e600=！
+
+1c // Text Position
+0108
+
+1f00=ま
+0600=か
+0e00=せ
+2900=る
+0000= 
+2f02=付
+0900=け
+2900=る
+
+/ffff

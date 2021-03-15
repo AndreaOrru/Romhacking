@@ -1,0 +1,60 @@
+$97-$95 = rom offset = afb1cd
+$9a-$98 = ram offset = 7f0000
+$9b = size
+$9e = loop index
+$9d = byte
+$9f = amount of bytes to write?
+
+$a3 = saved offset
+$a1 = byte to write?
+
+----------------------------------------------
+
+comp_data = rom[x:x]
+ofs = 0
+
+$9a = output = b''
+$9e = 0
+i = 0
+
+while i < len(rom)
+    $9b = comp_data[ofs:ofs+2]
+    ofs += 2
+    chunk = 0
+    
+    i += 2
+    
+    while chunk < $9b
+        $9d = comp_data[ofs]
+        
+        if $9e == 0:
+            ofs += 1
+            $9e = 8
+        else:
+            $9e -= 1
+            cf = $9d & 1
+            
+            if cf != 0:
+                output = comp_data[ofs]
+                ofs += 1
+                
+                chunk += 1
+                i += 1
+            else:
+                $9f = (comp_data[ofs] & 0f) + 2
+                word = comp_data[ofs:ofs+2]
+                $a3 = ofs + 2
+                $a1 = word >> 4
+                i -= 2
+                
+                n = 0
+                
+                while n < $9f
+                    if $a1 > 0:
+                        $a1 = $a1 & 0x00FF
+                        output = 0x00
+                        $9f -= 1
+                    else:
+                        
+
+                    
