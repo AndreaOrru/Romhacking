@@ -428,6 +428,7 @@ namespace dialogue {
       rtl
     }
 
+    // Clear the current tile in the RAM buffer.
     function clearTile {
       php; phx; phy
       rep #$20
@@ -447,6 +448,7 @@ namespace dialogue {
       rts
     }
 
+    // Clear the VRAM buffer containing the dialogue window.
     function clearVRAMBuffer {
       // Wait for VBlank.
       wai
