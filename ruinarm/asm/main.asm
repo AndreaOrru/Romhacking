@@ -14,6 +14,7 @@ macro seek(variable offset) {
 seek($80EAE8)
 include "dialogue.asm"
 include "font.asm"
+include "intro.asm"
 
 if pc() > $810000 {
   error "bank $80 exhausted"
