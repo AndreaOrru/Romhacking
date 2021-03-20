@@ -434,7 +434,7 @@ namespace dialogue {
 
       lda #$0000
       ldx.w bufferPointer
-      ldy #$0040
+      ldy #$0020
 
       loop: {
         sta $7E8000,x
