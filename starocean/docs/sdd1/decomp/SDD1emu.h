@@ -28,66 +28,61 @@ understood.
 
 ************************************************************************/
 
+class SDD1_IM { // Input Manager
 
-class SDD1_IM {  //Input Manager
-
- public:
+public:
   SDD1_IM(void) {}
   void prepareDecomp(const uint8 *in_buf);
   uint8 getCodeword(const uint8 code_len);
-  
- private:
+  uint32 getCompSize();
+
+private:
+  const uint8 *initial_byte_ptr;
   const uint8 *byte_ptr;
   uint8 bit_count;
-
 };
 
 ////////////////////////////////////////////////////
 
+class SDD1_GCD { // Golomb-Code Decoder
 
-class SDD1_GCD {  //Golomb-Code Decoder
-
- public:
+public:
   SDD1_GCD(SDD1_IM *associatedIM);
   void getRunCount(uint8 code_num, uint8 *MPScount, bool8 *LPSind);
-  
- private:
-  SDD1_IM *const IM;
 
+private:
+  SDD1_IM *const IM;
 };
 
 //////////////////////////////////////////////////////
 
+class SDD1_BG { // Bits Generator
 
-class SDD1_BG {  // Bits Generator
-
- public:
+public:
   SDD1_BG(SDD1_GCD *associatedGCD, uint8 code);
   void prepareDecomp(void);
   uint8 getBit(bool8 *endOfRun);
 
- private:
+private:
   const uint8 code_num;
   uint8 MPScount;
   bool8 LPSind;
   SDD1_GCD *const GCD;
-
 };
 
 ////////////////////////////////////////////////
 
+class SDD1_PEM { // Probability Estimation Module
 
-class SDD1_PEM {  //Probability Estimation Module
-
- public:
+public:
   SDD1_PEM(SDD1_BG *associatedBG0, SDD1_BG *associatedBG1,
-	   SDD1_BG *associatedBG2, SDD1_BG *associatedBG3,
-	   SDD1_BG *associatedBG4, SDD1_BG *associatedBG5,
-	   SDD1_BG *associatedBG6, SDD1_BG *associatedBG7);
+           SDD1_BG *associatedBG2, SDD1_BG *associatedBG3,
+           SDD1_BG *associatedBG4, SDD1_BG *associatedBG5,
+           SDD1_BG *associatedBG6, SDD1_BG *associatedBG7);
   void prepareDecomp(void);
   uint8 getBit(uint8 context);
 
- private:
+private:
   struct state {
     uint8 code_num;
     uint8 nextIfMPS;
@@ -98,64 +93,63 @@ class SDD1_PEM {  //Probability Estimation Module
     uint8 status;
     uint8 MPS;
   } contextInfo[32];
-  SDD1_BG * BG[8];
-
+  SDD1_BG *BG[8];
 };
 
 ///////////////////////////////////////////////////
 
+class SDD1_CM { // Context Model
 
-class SDD1_CM {  //Context Model
-
- public:
+public:
   SDD1_CM(SDD1_PEM *associatedPEM);
   void prepareDecomp(const uint8 *first_byte);
   uint8 getBit(void);
 
- private:
+private:
   uint8 bitplanesInfo;
   uint8 contextBitsInfo;
   uint8 bit_number;
   uint8 currBitplane;
   uint16 prevBitplaneBits[8];
   SDD1_PEM *const PEM;
-
 };
 
 ///////////////////////////////////////////////////
 
+class SDD1_OL { // Output Logic
 
-class SDD1_OL {  //Output Logic
-
- public:
+public:
   SDD1_OL(SDD1_CM *associatedCM);
   void prepareDecomp(const uint8 *first_byte, uint16 out_len, uint8 *out_buf);
   void launch(void);
 
- private:
+private:
   uint8 bitplanesInfo;
   uint16 length;
   uint8 *buffer;
   SDD1_CM *const CM;
-
 };
 
 /////////////////////////////////////////////////////////
 
-
 class SDD1emu {
 
- public:
+public:
   SDD1emu(void);
-  void decompress(const uint8 *in_buf, uint16 out_len, uint8 *out_buf);
+  uint32 decompress(const uint8 *in_buf, uint16 out_len, uint8 *out_buf);
 
- private:
+private:
   SDD1_IM IM;
   SDD1_GCD GCD;
-  SDD1_BG BG0;  SDD1_BG BG1;  SDD1_BG BG2;  SDD1_BG BG3;
-  SDD1_BG BG4;  SDD1_BG BG5;  SDD1_BG BG6;  SDD1_BG BG7;
+  SDD1_BG BG0;
+  SDD1_BG BG1;
+  SDD1_BG BG2;
+  SDD1_BG BG3;
+  SDD1_BG BG4;
+  SDD1_BG BG5;
+  SDD1_BG BG6;
+  SDD1_BG BG7;
   SDD1_PEM PEM;
   SDD1_CM CM;
   SDD1_OL OL;
-
 };
