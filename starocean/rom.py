@@ -3,7 +3,7 @@ from os.path import dirname, join
 from textwrap import wrap
 from typing import List, Tuple
 
-from cached_property import cached_property
+from functools import cached_property
 
 from romhacking.compression import bytepairCompress
 from romhacking.font import Font

@@ -5,6 +5,9 @@
 # Block indexes.
 FF4E11 - FF5045   # Assuming same number of blocks of English version.
 
+# Dialogue font.
+FF0000
+
 
 ##########
 #  CODE  #

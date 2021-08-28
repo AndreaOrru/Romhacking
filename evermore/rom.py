@@ -2,7 +2,7 @@ import re
 from os.path import dirname, join
 from typing import List, Tuple
 
-from cached_property import cached_property
+from functools import cached_property
 
 from evermore.formatting import unformat
 from evermore.layout import (

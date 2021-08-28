@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import List
 
-from cached_property import cached_property
+from functools import cached_property
 
 from romhacking.compression import encode_12bit
 from romhacking.utils import convert16to8, pairwise, readWord, writeWord

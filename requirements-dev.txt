@@ -1,16 +1,3 @@
-# Virtual environments.
-virtualenvwrapper
-future
-
-# Formatters and linters.
-black
-flake8
-isort
-mypy
-
-# Development tools.
-ipython
 pdbpp
-pre-commit
 pytest
 pytest-cov

@@ -1,6 +1,6 @@
 from typing import List
 
-from cached_property import cached_property
+from functools import cached_property
 
 from romhacking.utils import invalidate_property
 from starocean.formatting import format, unformat
