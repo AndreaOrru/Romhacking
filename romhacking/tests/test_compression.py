@@ -23,15 +23,15 @@ class CompressionTestCase(TestCase):
 
     def test_replacePair(self):
         data = [0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC]
-        replacePair(data, 0x0034_0012, 0x100)
-        replacePair(data, 0x0078_0056, 0x101)
-        replacePair(data, 0x00BC_009A, 0x102)
-        replacePair(data, 0x0101_0100, 0x103)
-        replacePair(data, 0x0102_0103, 0x104)
+        data = replacePair(data, 0x0034_0012, 0x100)
+        data = replacePair(data, 0x0078_0056, 0x101)
+        data = replacePair(data, 0x00BC_009A, 0x102)
+        data = replacePair(data, 0x0101_0100, 0x103)
+        data = replacePair(data, 0x0102_0103, 0x104)
         self.assertListEqual(data, [0x104])
 
     def test_replacePairBlocks(self):
-        data = [
+        raw_data = [
             [
                 [0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC],
                 [0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC],
@@ -41,11 +41,11 @@ class CompressionTestCase(TestCase):
                 [0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC],
             ],
         ]
-        replacePairBlocks(data, 0x0034_0012, 0x100)
-        replacePairBlocks(data, 0x0078_0056, 0x101)
-        replacePairBlocks(data, 0x00BC_009A, 0x102)
-        replacePairBlocks(data, 0x0101_0100, 0x103)
-        replacePairBlocks(data, 0x0102_0103, 0x104)
+        data = replacePairBlocks(raw_data, 0x0034_0012, 0x100)
+        data = replacePairBlocks(data, 0x0078_0056, 0x101)
+        data = replacePairBlocks(data, 0x00BC_009A, 0x102)
+        data = replacePairBlocks(data, 0x0101_0100, 0x103)
+        data = replacePairBlocks(data, 0x0102_0103, 0x104)
         self.assertListEqual(
             data,
             [

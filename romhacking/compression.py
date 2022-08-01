@@ -9,19 +9,19 @@ N_SYMBOLS = 0x1000
 
 def replacePair(data: List[int], pair: int, symbol: int):
     i = 0
+    hi = pair & 0xFFFF
+    low = pair >> 16
     while True:
         if i >= len(data) - 1:
-            return
-        if (data[i] == pair & 0xFFFF) and (data[i + 1] == pair >> 16):
+            return data
+        if (data[i] == hi) and (data[i + 1] == low):
             data[i] = symbol
-            data.pop(i + 1)
+            del data[i + 1]
         i += 1
 
 
 def replacePairBlocks(blocks_data: List[List[List[int]]], pair: int, symbol: int):
-    for block_data in blocks_data:
-        for sentence_data in block_data:
-            replacePair(sentence_data, pair, symbol)
+    return [[replacePair(sentence_data, pair, symbol) for sentence_data in block_data] for block_data in blocks_data]
 
 
 try:
@@ -29,11 +29,11 @@ try:
 except ModuleNotFoundError:
 
     def bytepairCompress(
-        blocks_data: List[List[List[int]]],
+            blocks_data: List[List[List[int]]],
     ) -> Tuple[List[Tuple[int, int]], List[List[List[int]]]]:
 
         blocks_data = deepcopy(blocks_data)
-        replacePairBlocks(blocks_data, 0x00FF00FF, 0x100)
+        blocks_data = replacePairBlocks(blocks_data, 0x00FF00FF, 0x100)
 
         symbol = 0x101
         dictionary = []
